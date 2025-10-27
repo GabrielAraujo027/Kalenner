@@ -29,11 +29,8 @@
     <Folder Include="Entities\Appointments\Responses\" />
     <Folder Include="Entities\Companies\Responses\" />
     <Folder Include="Entities\Companies\Requests\" />
-    <Folder Include="Entities\ProfessionalsServices\Requests\" />
     <Folder Include="Entities\ProfessionalsServices\Responses\" />
-    <Folder Include="Entities\Professionals\Requests\" />
     <Folder Include="Entities\Professionals\Responses\" />
-    <Folder Include="Entities\Services\Requests\" />
     <Folder Include="Entities\Services\Responses\" />
   </ItemGroup>
 

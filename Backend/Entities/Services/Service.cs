@@ -7,7 +7,10 @@ namespace Kalenner.Entities.Services
     public class Service
     {
         public int Id { get; set; }
+
+        public int CompanyId { get; set; }
         public Company Company { get; set; } = default!;
+
         public string Name { get; set; } = default!;
         public string? Description { get; set; }
         public int DurationMinutes { get; set; }

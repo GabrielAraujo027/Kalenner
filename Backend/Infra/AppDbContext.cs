@@ -26,8 +26,8 @@ namespace Kalenner.Infra
             builder.Entity<ApplicationUser>()
                 .HasOne(u => u.Company)
                 .WithMany(c => c.Users)
-                .HasForeignKey("CompanyId")
-                .OnDelete(DeleteBehavior.Restrict); // evita cascades múltiplos
+                .HasForeignKey(u => u.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<ProfessionalService>()
                 .HasKey(ps => ps.Id);
@@ -35,36 +35,47 @@ namespace Kalenner.Infra
             builder.Entity<ProfessionalService>()
                 .HasOne(ps => ps.Professional)
                 .WithMany(p => p.ProfessionalServices)
+                .HasForeignKey(ps => ps.ProfessionalId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<ProfessionalService>()
                 .HasOne(ps => ps.Service)
                 .WithMany(s => s.ProfessionalServices)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey(ps => ps.ServiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ProfessionalService>()
+                .HasIndex(ps => new { ps.ProfessionalId, ps.ServiceId })
+                .IsUnique();
 
             builder.Entity<Appointment>()
                 .HasOne(a => a.Company)
                 .WithMany(c => c.Appointments)
+                .HasForeignKey(a => a.CompanyId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Appointment>()
                 .HasOne(a => a.Service)
                 .WithMany(s => s.Appointments)
+                .HasForeignKey(a => a.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Appointment>()
                 .HasOne(a => a.Professional)
                 .WithMany(p => p.Appointments)
+                .HasForeignKey(a => a.ProfessionalId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             builder.Entity<Appointment>()
                 .HasOne(a => a.Client)
                 .WithMany(u => u.Appointments)
+                .HasForeignKey(a => a.ClientId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             builder.Entity<Appointment>()
                 .Property(a => a.Status)
-                .HasConversion<string>();
+                .HasConversion<string>()
+                .HasMaxLength(32);
 
 
             builder.Entity<Service>()
@@ -83,11 +94,13 @@ namespace Kalenner.Infra
             builder.Entity<Professional>()
                 .HasOne(p => p.Company)
                 .WithMany(c => c.Professionals)
+                .HasForeignKey(p => p.CompanyId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<Service>()
                 .HasOne(s => s.Company)
                 .WithMany(c => c.Services)
+                .HasForeignKey(s => s.CompanyId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
 
