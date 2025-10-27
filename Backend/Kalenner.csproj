@@ -24,4 +24,17 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Entities\Appointments\Requests\" />
+    <Folder Include="Entities\Appointments\Responses\" />
+    <Folder Include="Entities\Companies\Responses\" />
+    <Folder Include="Entities\Companies\Requests\" />
+    <Folder Include="Entities\ProfessionalsServices\Requests\" />
+    <Folder Include="Entities\ProfessionalsServices\Responses\" />
+    <Folder Include="Entities\Professionals\Requests\" />
+    <Folder Include="Entities\Professionals\Responses\" />
+    <Folder Include="Entities\Services\Requests\" />
+    <Folder Include="Entities\Services\Responses\" />
+  </ItemGroup>
+
 </Project>

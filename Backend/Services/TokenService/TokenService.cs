@@ -12,7 +12,7 @@ namespace Kalenner.Services.TokenService
         private readonly IConfiguration _cfg;
         public TokenService(IConfiguration cfg) => _cfg = cfg;
 
-        public Task<string> GenerateAsync(ApplicationUser user, IEnumerable<string> roles, DateTime expiresAt)
+        public Task<string> GenerateAsync(ApplicationUser user, IEnumerable<string> roles, DateTime expiresAt, int companyId)
         {
             var jwt = _cfg.GetSection("Jwt");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
@@ -21,12 +21,12 @@ namespace Kalenner.Services.TokenService
             var claims = new List<Claim>
             {
                 new(JwtRegisteredClaimNames.Sub, user.Id),
-                new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+                new(JwtRegisteredClaimNames.Email, user.Email!),
+                new Claim("CompanyId", companyId.ToString()),
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            foreach (var r in roles)
-                claims.Add(new Claim(ClaimTypes.Role, r));
+            claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
             var token = new JwtSecurityToken(
                 issuer: jwt["Issuer"],
