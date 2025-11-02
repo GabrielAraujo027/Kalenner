@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,7 +54,9 @@ builder.Services
             ValidateAudience = true,
             ValidAudience = jwt["Audience"],
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
+            ClockSkew = TimeSpan.Zero,
+            NameClaimType = ClaimTypes.NameIdentifier,
+            RoleClaimType = ClaimTypes.Role
         };
     });
 
@@ -67,19 +70,25 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Kalenner API", Version = "v1" });
 
-    var securityScheme = new OpenApiSecurityScheme
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Insira o token: Bearer {seu_token_jwt}"
-    };
-    c.AddSecurityDefinition("Bearer", securityScheme);
+        Description = "Cole apenas o token JWT (sem o prefixo 'Bearer ')"
+    });
+
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
-        { securityScheme, Array.Empty<string>() }
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            Array.Empty<string>()
+        }
     });
 });
 

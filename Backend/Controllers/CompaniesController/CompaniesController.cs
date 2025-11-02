@@ -21,7 +21,6 @@ namespace Kalenner.Controllers.CompaniesController
             _userManager = userManager;
         }
 
-        // Recupera os dados da empresa do usuário autenticado
         [HttpGet]
         public async Task<ActionResult<object>> GetAsync()
         {

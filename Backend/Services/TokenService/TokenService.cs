@@ -21,7 +21,9 @@ namespace Kalenner.Services.TokenService
             var claims = new List<Claim>
             {
                 new(JwtRegisteredClaimNames.Sub, user.Id),
+                new(ClaimTypes.NameIdentifier, user.Id),
                 new(JwtRegisteredClaimNames.Email, user.Email!),
+                new(ClaimTypes.Email, user.Email!),
                 new Claim("CompanyId", companyId.ToString()),
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
