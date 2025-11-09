@@ -312,9 +312,12 @@ namespace Kalenner.Controllers.AppointmentsController
             return Ok(resp);
         }
 
-        [HttpPost("{id:int}/cancel")]
-        public async Task<IActionResult> CancelAsync([FromRoute] int id)
+        [HttpPatch("{id:int}/status")]
+        public async Task<IActionResult> UpdateStatusAsync([FromRoute] int id, [FromBody] AppointmentStatus? status)
         {
+            if (status is null)
+                return BadRequest(new { error = "Status obrigatório." });
+
             var user = await _userManager.GetUserAsync(User);
             if (user is null) return Unauthorized();
             var isEmpresa = await _userManager.IsInRoleAsync(user, Roles.Empresa);
@@ -327,10 +330,15 @@ namespace Kalenner.Controllers.AppointmentsController
             if (!isEmpresa && appointment.ClientId != user.Id)
                 return Forbid();
 
-            if (appointment.Status != AppointmentStatus.Scheduled)
-                return BadRequest(new { error = "Somente agendamentos em Scheduled podem ser cancelados." });
+            if (!isEmpresa)
+            {
+                if (appointment.Status != AppointmentStatus.Scheduled)
+                    return BadRequest(new { error = "Somente agendamentos em Scheduled podem ser cancelados." });
+                if (status != AppointmentStatus.Cancelled)
+                    return BadRequest(new { error = "Status inválido para o cliente." });
+            }
 
-            appointment.Status = AppointmentStatus.Cancelled;
+            appointment.Status = status.Value;
             appointment.UpdatedAt = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
