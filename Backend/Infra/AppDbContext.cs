@@ -77,6 +77,8 @@ namespace Kalenner.Infra
                 .HasConversion<string>()
                 .HasMaxLength(32);
 
+            builder.Entity<Appointment>()
+                .HasIndex(a => new { a.CompanyId, a.ProfessionalId, a.Start });
 
             builder.Entity<Service>()
                 .Property(s => s.Price)

@@ -66,11 +66,11 @@ namespace Kalenner.Migrations
 
                     b.HasIndex("ClientId");
 
-                    b.HasIndex("CompanyId");
-
                     b.HasIndex("ProfessionalId");
 
                     b.HasIndex("ServiceId");
+
+                    b.HasIndex("CompanyId", "ProfessionalId", "Start");
 
                     b.ToTable("Appointments");
                 });
