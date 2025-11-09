@@ -36,7 +36,7 @@ namespace Kalenner.Controllers.Auth
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] CadastroRequest dto)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest dto)
         {
             var exists = await _db.Users
                 .AsNoTracking()
@@ -70,7 +70,7 @@ namespace Kalenner.Controllers.Auth
         }
 
         [HttpPost("register-user-company")]
-        public async Task<IActionResult> RegisterUserCompany([FromBody] CadastroRequest dto)
+        public async Task<IActionResult> RegisterUserCompany([FromBody] RegisterRequest dto)
         {
             var exists = await _db.Users
                 .AsNoTracking()
