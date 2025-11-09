@@ -124,6 +124,7 @@ namespace Kalenner.Controllers.AppointmentsController
                 return BadRequest(new { error = "Serviço inválido." });
 
             int? professionalId = dto.ProfessionalId;
+            string? professionalName = null;
             if (professionalId.HasValue)
             {
                 var professional = await _db.Professionals
@@ -135,6 +136,8 @@ namespace Kalenner.Controllers.AppointmentsController
                     .AnyAsync(ps => ps.ProfessionalId == professionalId.Value && ps.ServiceId == service.Id);
                 if (!linkExists)
                     return BadRequest(new { error = "O profissional não executa o serviço informado." });
+
+                professionalName = professional.Name;
             }
 
             int duration = service.DurationMinutes;
@@ -186,7 +189,9 @@ namespace Kalenner.Controllers.AppointmentsController
             {
                 Id = appointment.Id,
                 ServiceId = appointment.ServiceId,
+                ServiceName = service.Name,
                 ProfessionalId = appointment.ProfessionalId,
+                ProfessionalName = professionalName,
                 ClientId = appointment.ClientId,
                 Start = appointment.Start,
                 End = appointment.End,
