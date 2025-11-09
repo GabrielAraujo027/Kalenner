@@ -87,24 +87,34 @@ namespace Kalenner.Controllers.ProfessionalServicesController
             var services = await _db.Services.Where(s => serviceIds.Contains(s.Id) && s.CompanyId == user.CompanyId).ToListAsync();
             if (services.Count != serviceIds.Count) return BadRequest(new { error = "Um ou mais serviços não pertencem à empresa do usuário." });
 
+            var servicesById = services.ToDictionary(s => s.Id);
+
             foreach (var item in dto.Items)
             {
                 var exists = await _db.ProfessionalServices.AnyAsync(ps => ps.ProfessionalId == dto.ProfessionalId && ps.ServiceId == item.ServiceId);
+                var svc = servicesById[item.ServiceId];
+
                 if (!exists)
                 {
-                    _db.ProfessionalServices.Add(new ProfessionalService
+                    var newPs = new ProfessionalService
                     {
                         ProfessionalId = dto.ProfessionalId,
                         ServiceId = item.ServiceId,
-                        DurationMinutesOverride = item.DurationMinutesOverride,
-                        PriceOverride = item.PriceOverride
-                    });
+                        DurationMinutesOverride = item.DurationMinutesOverride ?? svc.DurationMinutes,
+                        PriceOverride = item.PriceOverride ?? svc.Price
+                    };
+
+                    _db.ProfessionalServices.Add(newPs);
                 }
                 else
                 {
                     var ps = await _db.ProfessionalServices.FirstAsync(x => x.ProfessionalId == dto.ProfessionalId && x.ServiceId == item.ServiceId);
-                    ps.DurationMinutesOverride = item.DurationMinutesOverride;
-                    ps.PriceOverride = item.PriceOverride;
+
+                    if (item.DurationMinutesOverride.HasValue)
+                        ps.DurationMinutesOverride = item.DurationMinutesOverride;
+
+                    if (item.PriceOverride.HasValue)
+                        ps.PriceOverride = item.PriceOverride;
                 }
             }
 
@@ -124,26 +134,33 @@ namespace Kalenner.Controllers.ProfessionalServicesController
 
             var professionalIds = dto.Items.Select(i => i.ProfessionalId).Distinct().ToList();
             var professionals = await _db.Professionals.Where(p => professionalIds.Contains(p.Id) && p.CompanyId == user.CompanyId).ToListAsync();
-            if (professionals.Count != professionalIds.Count) return BadRequest(new { error = "Um ou mais profissionais não pertencem à empresa do usuário." });
+            if (professionals.Count != professionalIds.Count) return BadRequest(new { error = "Um ou mais profissionais não pertencem à empresa." });
 
             foreach (var item in dto.Items)
             {
                 var exists = await _db.ProfessionalServices.AnyAsync(ps => ps.ProfessionalId == item.ProfessionalId && ps.ServiceId == dto.ServiceId);
+
                 if (!exists)
                 {
-                    _db.ProfessionalServices.Add(new ProfessionalService
+                    var newPs = new ProfessionalService
                     {
                         ProfessionalId = item.ProfessionalId,
                         ServiceId = dto.ServiceId,
-                        DurationMinutesOverride = item.DurationMinutesOverride,
-                        PriceOverride = item.PriceOverride
-                    });
+                        DurationMinutesOverride = item.DurationMinutesOverride ?? service.DurationMinutes,
+                        PriceOverride = item.PriceOverride ?? service.Price
+                    };
+
+                    _db.ProfessionalServices.Add(newPs);
                 }
                 else
                 {
                     var ps = await _db.ProfessionalServices.FirstAsync(x => x.ProfessionalId == item.ProfessionalId && x.ServiceId == dto.ServiceId);
-                    ps.DurationMinutesOverride = item.DurationMinutesOverride;
-                    ps.PriceOverride = item.PriceOverride;
+
+                    if (item.DurationMinutesOverride.HasValue)
+                        ps.DurationMinutesOverride = item.DurationMinutesOverride;
+
+                    if (item.PriceOverride.HasValue)
+                        ps.PriceOverride = item.PriceOverride;
                 }
             }
 
