@@ -61,10 +61,44 @@ namespace Kalenner.Controllers.Auth
             if (!result.Succeeded)
                 return BadRequest(new { error = string.Join("; ", result.Errors.Select(e => e.Description)) });
 
-            if (!await _roleManager.RoleExistsAsync("Cliente"))
-                await _roleManager.CreateAsync(new IdentityRole("Cliente"));
+            if (!await _roleManager.RoleExistsAsync(Roles.Cliente))
+                await _roleManager.CreateAsync(new IdentityRole(Roles.Cliente));
 
-            await _userManager.AddToRoleAsync(user, "Cliente");
+            await _userManager.AddToRoleAsync(user, Roles.Cliente);
+
+            return Ok(new { message = "Usuário registrado com sucesso." });
+        }
+
+        [HttpPost("register-user-company")]
+        public async Task<IActionResult> RegisterUserCompany([FromBody] CadastroRequest dto)
+        {
+            var exists = await _db.Users
+                .AsNoTracking()
+                .AnyAsync(u => u.Email == dto.Email && u.Company.Id == dto.CompanyId);
+
+            if (exists)
+                return BadRequest(new { error = "Já existe um usuário com este email para a empresa informada." });
+
+            Company company = await _db.Companies.FirstOrDefaultAsync(c => c.Id == dto.CompanyId);
+
+            if (company == null)
+                return BadRequest(new { error = "Empresa inválida." });
+
+            var user = new ApplicationUser
+            {
+                UserName = dto.Email,
+                Email = dto.Email,
+                Company = company
+            };
+
+            var result = await _userManager.CreateAsync(user, dto.Password);
+            if (!result.Succeeded)
+                return BadRequest(new { error = string.Join("; ", result.Errors.Select(e => e.Description)) });
+
+            if (!await _roleManager.RoleExistsAsync(Roles.Empresa))
+                await _roleManager.CreateAsync(new IdentityRole(Roles.Empresa));
+
+            await _userManager.AddToRoleAsync(user, Roles.Empresa);
 
             return Ok(new { message = "Usuário registrado com sucesso." });
         }
