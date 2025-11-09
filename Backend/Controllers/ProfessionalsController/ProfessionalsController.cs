@@ -39,6 +39,7 @@ namespace Kalenner.Controllers.ProfessionalsController
         }
 
         [HttpPost]
+        [Authorize(Roles = Roles.Empresa)]
         public async Task<ActionResult<object>> CreateAsync([FromBody] ProfessionalCreateRequest dto)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -57,10 +58,10 @@ namespace Kalenner.Controllers.ProfessionalsController
             _db.Professionals.Add(entity);
             await _db.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetByIdAsync), new { id = entity.Id }, new { entity.Id, entity.Name, entity.IsActive });
+            return CreatedAtRoute("GetProfessionalById", new { id = entity.Id }, new { entity.Id, entity.Name, entity.IsActive });
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("{id:int}", Name = "GetProfessionalById")]
         public async Task<ActionResult<object>> GetByIdAsync([FromRoute] int id)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -76,6 +77,7 @@ namespace Kalenner.Controllers.ProfessionalsController
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = Roles.Empresa)]
         public async Task<IActionResult> DeleteAsync([FromRoute] int id)
         {
             var user = await _userManager.GetUserAsync(User);

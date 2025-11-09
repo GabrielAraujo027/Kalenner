@@ -39,6 +39,7 @@ namespace Kalenner.Controllers.ServicesController
         }
 
         [HttpPost]
+        [Authorize(Roles = Roles.Empresa)]
         public async Task<ActionResult<object>> CreateAsync([FromBody] ServiceCreateRequest dto)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -63,10 +64,10 @@ namespace Kalenner.Controllers.ServicesController
             _db.Services.Add(entity);
             await _db.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetByIdAsync), new { id = entity.Id }, new { entity.Id, entity.Name });
+            return CreatedAtRoute("GetServiceById", new { id = entity.Id }, new { entity.Id, entity.Name });
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("{id:int}", Name = "GetServiceById")]
         public async Task<ActionResult<object>> GetByIdAsync([FromRoute] int id)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -82,6 +83,7 @@ namespace Kalenner.Controllers.ServicesController
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = Roles.Empresa)]
         public async Task<IActionResult> DeleteAsync([FromRoute] int id)
         {
             var user = await _userManager.GetUserAsync(User);

@@ -74,6 +74,7 @@ namespace Kalenner.Controllers.ProfessionalServicesController
         }
 
         [HttpPost("professional/link")]
+        [Authorize(Roles = Roles.Empresa)]
         public async Task<IActionResult> LinkServicesToProfessional([FromBody] LinkServicesToProfessionalRequest dto)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -112,6 +113,7 @@ namespace Kalenner.Controllers.ProfessionalServicesController
         }
 
         [HttpPost("service/link")]
+        [Authorize(Roles = Roles.Empresa)]
         public async Task<IActionResult> LinkProfessionalsToService([FromBody] LinkProfessionalsToServiceRequest dto)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -150,6 +152,7 @@ namespace Kalenner.Controllers.ProfessionalServicesController
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = Roles.Empresa)]
         public async Task<IActionResult> DeleteLink([FromRoute] int id)
         {
             var user = await _userManager.GetUserAsync(User);
