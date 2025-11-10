@@ -13,3 +13,24 @@
 - [ ] Validar integração com Supabase
 - [ ] Revisar e otimizar estilos Tailwind
 
+
+## Telas Faltantes
+
+- [x] Migrar Tela-Compromisso-Visao usuario-empresa
+- [x] Migrar Tela-Config-Colaboradores (Colaboradores, Configuracoes, Personalizacao, Cadastro)
+- [x] Integrar navegação para as novas telas
+- [x] Testar todas as telas integradas
+- [ ] Gerar novo arquivo ZIP com todas as telas
+
+## Integração com Backend
+
+- [x] Criar serviço de API para chamadas HTTP
+- [x] Integrar endpoint de login (/api/auth/login)
+- [x] Integrar endpoint de registro (/api/auth/register)
+- [x] Implementar autenticação JWT e armazenamento de token
+- [ ] Integrar endpoints de Empresas (/api/companies)
+- [ ] Integrar endpoints de Profissionais (/api/professionals)
+- [ ] Integrar endpoints de Serviços (/api/services)
+- [ ] Integrar endpoints de Agendamentos (/api/appointments)
+- [x] Implementar proteção de rotas com verificação de token
+- [ ] Testar integração completa

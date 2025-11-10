@@ -2,73 +2,41 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
+import { toast } from "sonner";
 
 const Login = () => {
   const [, navigate] = useLocation();
-  const { toast } = useToast();
+  const { login, loading, error } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [companyId, setCompanyId] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+
+    if (!email || !password || !companyId) {
+      toast.error("Por favor, preencha todos os campos");
+      return;
+    }
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        toast({
-          title: "Erro ao entrar",
-          description: data?.error || data?.message || "Erro ao autenticar",
-          variant: "destructive",
-        });
-        return;
+      const response = await login(email, password, companyId);
+      toast.success("Login realizado com sucesso!");
+      
+      // Verificar o role do usuário para redirecionar
+      if (response.roles.includes("Empresa")) {
+        navigate("/empresa");
+      } else {
+        navigate("/cliente");
       }
-
-      // Token may come as `token` or `Token` based on backend casing
-      const token: string | undefined = data?.token ?? data?.Token;
-      if (token) {
-        localStorage.setItem("kalenner_token", token);
-      }
-      // Optional: persist extra fields if provided by backend
-      if (data?.expiresAt ?? data?.ExpiresAt) {
-        localStorage.setItem("kalenner_token_expires", (data?.expiresAt ?? data?.ExpiresAt) as string);
-      }
-      if (data?.email ?? data?.Email) {
-        localStorage.setItem("kalenner_email", (data?.email ?? data?.Email) as string);
-      }
-      if (data?.roles ?? data?.Roles) {
-        try {
-          localStorage.setItem("kalenner_roles", JSON.stringify(data?.roles ?? data?.Roles));
-        } catch {
-          // ignore serialization/storage errors
-        }
-      }
-
-      toast({
-        title: "Login realizado!",
-        description: "Bem-vindo de volta!",
-      });
-      navigate("/dashboard");
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro de rede ao fazer login",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Erro ao fazer login";
+      toast.error(errorMessage);
     }
   };
 
@@ -87,6 +55,20 @@ const Login = () => {
               placeholder="E-mail:"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
+              className="pl-12 h-14 bg-input border-none rounded-xl text-base"
+            />
+          </div>
+
+          <div className="relative">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2">
+              <Mail className="w-5 h-5 text-foreground" />
+            </div>
+            <Input
+              type="text"
+              placeholder="ID da Empresa:"
+              value={companyId}
+              onChange={(e) => setCompanyId(e.target.value)}
               required
               className="pl-12 h-14 bg-input border-none rounded-xl text-base"
             />
@@ -117,6 +99,12 @@ const Login = () => {
             </button>
           </div>
 
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+
           <div className="text-center space-y-2 pt-4">
             <p className="text-sm text-foreground">
               Ainda não fez seu cadastro?{" "}
@@ -128,7 +116,7 @@ const Login = () => {
               href="/forgot-password"
               className="block text-sm text-destructive font-medium hover:underline"
             >
-              {/* Esqueceu sua senha? Recuperar! */}
+              Esqueceu sua senha?
             </a>
           </div>
 
