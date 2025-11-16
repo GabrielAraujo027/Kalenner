@@ -1,51 +1,42 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requiredRole?: string;
+  requiredRole?: "Empresa" | "Cliente";
 }
 
-export const ProtectedRoute = ({
-  children,
-  requiredRole,
-}: ProtectedRouteProps) => {
+export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
+  const { user, loading } = useAuth();
   const [, navigate] = useLocation();
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    const user = localStorage.getItem("authUser");
-
-    if (!token || !user) {
+    if (!loading && !user) {
       navigate("/login");
-      return;
+    } else if (!loading && user && requiredRole && !user.roles.includes(requiredRole)) {
+      navigate("/dashboard");
     }
+  }, [user, loading, requiredRole, navigate]);
 
-    if (requiredRole) {
-      try {
-        const userData = JSON.parse(user);
-        if (!userData.roles || !userData.roles.includes(requiredRole)) {
-          navigate("/");
-          return;
-        }
-      } catch {
-        navigate("/login");
-        return;
-      }
-    }
-
-    setIsAuthorized(true);
-  }, [navigate, requiredRole]);
-
-  if (isAuthorized === null) {
-    return <div>Carregando...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
   }
 
-  if (!isAuthorized) {
+  if (!user) {
+    return null;
+  }
+
+  if (requiredRole && !user.roles.includes(requiredRole)) {
     return null;
   }
 
   return <>{children}</>;
-};
+}

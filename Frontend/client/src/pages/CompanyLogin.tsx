@@ -9,7 +9,7 @@ import AuthLayout from "@/components/AuthLayout";
 import { toast } from "sonner";
 import { Link } from "wouter";
 
-export default function Login() {
+export default function CompanyLogin() {
   const [, navigate] = useLocation();
   const { login } = useAuth();
   const { company, fetchCompany, loading: companyLoading } = useCompany();
@@ -23,7 +23,7 @@ export default function Login() {
     const pathSegments = window.location.pathname.split("/").filter(Boolean);
     const companySlug = pathSegments[0];
 
-    if (companySlug && companySlug !== "login") {
+    if (companySlug && companySlug !== "company-login") {
       fetchCompany(companySlug);
     }
   }, [fetchCompany]);
@@ -39,7 +39,7 @@ export default function Login() {
     setLoading(true);
     try {
       // Simulating API call
-      // In production: const response = await fetch(`/api/auth/login`, { ... });
+      // In production: const response = await fetch(`/api/auth/company-login`, { ... });
       await login(email, password, company?.id || "default");
       toast.success("Login successful!");
       navigate("/dashboard");
@@ -65,9 +65,14 @@ export default function Login() {
   return (
     <AuthLayout company={company}>
       <div className="w-full bg-card rounded-2xl shadow-xl p-8 md:p-10">
-        <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-foreground">
-          Sign In
-        </h1>
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-center text-foreground">
+            Company Login
+          </h1>
+          <p className="text-center text-muted-foreground mt-2 text-sm">
+            Access your business dashboard
+          </p>
+        </div>
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div className="relative">
@@ -106,14 +111,11 @@ export default function Login() {
           </div>
 
           <div className="text-center space-y-3 pt-2">
-            <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link href={`/${company?.id || ""}/signup`}>
-                <span className="font-medium text-primary hover:underline cursor-pointer">
-                  Sign up here!
-                </span>
-              </Link>
-            </p>
+            <Link href={`/${company?.id || ""}/user-login`}>
+              <span className="block text-sm text-muted-foreground hover:text-foreground cursor-pointer">
+                Are you a client? Sign in here
+              </span>
+            </Link>
             <Link href={`/${company?.id || ""}/forgot-password`}>
               <span className="block text-sm text-destructive font-medium hover:underline cursor-pointer">
                 Forgot your password?
@@ -129,6 +131,17 @@ export default function Login() {
             {loading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
+
+        <div className="mt-6 pt-6 border-t border-border text-center">
+          <p className="text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Link href={`/${company?.id || ""}/signup`}>
+              <span className="font-medium text-primary hover:underline cursor-pointer">
+                Register here
+              </span>
+            </Link>
+          </p>
+        </div>
       </div>
     </AuthLayout>
   );

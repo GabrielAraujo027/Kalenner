@@ -4,19 +4,20 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import { CompanyProvider } from "./contexts/CompanyContext";
 import Login from "./pages/Login";
+import CompanyLogin from "./pages/CompanyLogin";
+import UserLogin from "./pages/UserLogin";
+import UserAppointments from "./pages/UserAppointments";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
-import DashboardMain from "./pages/Dashboard-Main";
-import CompromissoIndex from "./pages/Compromisso-Index";
-import CompanyDashboard from "./pages/CompanyDashboard";
-import ClientDashboard from "./pages/ClientDashboard";
+
 import Colaboradores from "./pages/Colaboradores";
 import Configuracoes from "./pages/Configuracoes";
-import Personalizacao from "./pages/Personalizacao";
-import Cadastro from "./pages/Cadastro";
+import Servicos from "./pages/Servicos";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AuthProvider } from "./contexts/AuthContext";
 
 function Router() {
   return (
@@ -25,6 +26,18 @@ function Router() {
       <Route path={"/login"} component={Login} />
       <Route path={"/signup"} component={Signup} />
       <Route path={"/forgot-password"} component={ForgotPassword} />
+      <Route path={"/:company/login"} component={Login} />
+      <Route path={"/:company/company-login"} component={CompanyLogin} />
+      <Route path={"/:company/user-login"} component={UserLogin} />
+      <Route path={"/:company/signup"} component={Signup} />
+      <Route path={"/:company/forgot-password"} component={ForgotPassword} />
+      <Route path={"/my-appointments"}>
+        {() => (
+          <ProtectedRoute>
+            <UserAppointments />
+          </ProtectedRoute>
+        )}
+      </Route>
       <Route path={"/dashboard"}>
         {() => (
           <ProtectedRoute>
@@ -32,37 +45,10 @@ function Router() {
           </ProtectedRoute>
         )}
       </Route>
-      <Route path={"/dashboard-main"}>
-        {() => (
-          <ProtectedRoute>
-            <DashboardMain />
-          </ProtectedRoute>
-        )}
-      </Route>
-      <Route path={"/compromisso"}>
-        {() => (
-          <ProtectedRoute>
-            <CompromissoIndex />
-          </ProtectedRoute>
-        )}
-      </Route>
-      <Route path={"/empresa"}>
-        {() => (
-          <ProtectedRoute requiredRole="Empresa">
-            <CompanyDashboard />
-          </ProtectedRoute>
-        )}
-      </Route>
-      <Route path={"/cliente"}>
-        {() => (
-          <ProtectedRoute requiredRole="Cliente">
-            <ClientDashboard />
-          </ProtectedRoute>
-        )}
-      </Route>
+
       <Route path={"/colaboradores"}>
         {() => (
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="Empresa">
             <Colaboradores />
           </ProtectedRoute>
         )}
@@ -74,17 +60,17 @@ function Router() {
           </ProtectedRoute>
         )}
       </Route>
-      <Route path={"/personalizacao"}>
+      <Route path={"/servicos"}>
         {() => (
-          <ProtectedRoute>
-            <Personalizacao />
+          <ProtectedRoute requiredRole="Empresa">
+            <Servicos />
           </ProtectedRoute>
         )}
       </Route>
-      <Route path={"/cadastro"}>
+      <Route path={"/:company/my-appointments"}>
         {() => (
           <ProtectedRoute>
-            <Cadastro />
+            <UserAppointments />
           </ProtectedRoute>
         )}
       </Route>
@@ -107,10 +93,14 @@ function App() {
         defaultTheme="light"
         // switchable
       >
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <CompanyProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </AuthProvider>
+        </CompanyProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
