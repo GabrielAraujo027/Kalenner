@@ -12,7 +12,7 @@ import { Link } from "wouter";
 export default function Login() {
   const [, navigate] = useLocation();
   const { login } = useAuth();
-  const { company, fetchCompany, loading: companyLoading } = useCompany();
+  const { company, fetchCompany, loading: companyLoading, error } = useCompany();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -22,7 +22,6 @@ export default function Login() {
   useEffect(() => {
     const pathSegments = window.location.pathname.split("/").filter(Boolean);
     const companySlug = pathSegments[0];
-
     if (companySlug && companySlug !== "login") {
       fetchCompany(companySlug);
     }
@@ -38,9 +37,11 @@ export default function Login() {
 
     setLoading(true);
     try {
-      // Simulating API call
-      // In production: const response = await fetch(`/api/auth/login`, { ... });
-      await login(email, password, company?.id || "default");
+      if (!company) {
+        toast.error("Empresa não carregada");
+        return;
+      }
+      await login(email, password, company.id);
       toast.success("Login successful!");
       navigate("/dashboard");
     } catch (err) {
@@ -57,6 +58,17 @@ export default function Login() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading company data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <p className="text-destructive font-medium">{error}</p>
+          <p className="text-sm text-muted-foreground">Ops... A tela buscada não se encontra disponível, verifique o link e tente novamente.</p>
         </div>
       </div>
     );
@@ -108,13 +120,13 @@ export default function Login() {
           <div className="text-center space-y-3 pt-2">
             <p className="text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link href={`/${company?.id || ""}/signup`}>
+              <Link href={`/${company?.slug || ""}/signup`}>
                 <span className="font-medium text-primary hover:underline cursor-pointer">
                   Sign up here!
                 </span>
               </Link>
             </p>
-            <Link href={`/${company?.id || ""}/forgot-password`}>
+            <Link href={`/${company?.slug || ""}/forgot-password`}>
               <span className="block text-sm text-destructive font-medium hover:underline cursor-pointer">
                 Forgot your password?
               </span>

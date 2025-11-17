@@ -1,56 +1,36 @@
 export interface PasswordValidation {
   isValid: boolean;
   errors: string[];
+  criteria: {
+    length: boolean;
+    uppercase: boolean;
+    lowercase: boolean;
+    number: boolean;
+    special: boolean;
+  };
 }
 
-export const passwordRules = {
-  minLength: 8,
-  requireUppercase: true,
-  requireLowercase: true,
-  requireNumbers: true,
-  requireSpecialChar: true,
-};
+const MIN_LENGTH = 8;
 
 export function validatePassword(password: string): PasswordValidation {
+  const criteria = {
+    length: password.length >= MIN_LENGTH,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /\d/.test(password),
+    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+  };
+
   const errors: string[] = [];
-
-  if (password.length < passwordRules.minLength) {
-    errors.push(`Password must be at least ${passwordRules.minLength} characters long`);
-  }
-
-  if (passwordRules.requireUppercase && !/[A-Z]/.test(password)) {
-    errors.push("Password must contain at least one uppercase letter");
-  }
-
-  if (passwordRules.requireLowercase && !/[a-z]/.test(password)) {
-    errors.push("Password must contain at least one lowercase letter");
-  }
-
-  if (passwordRules.requireNumbers && !/\d/.test(password)) {
-    errors.push("Password must contain at least one number");
-  }
-
-  if (passwordRules.requireSpecialChar && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-    errors.push("Password must contain at least one special character (!@#$%^&*)");
-  }
+  if (!criteria.length) errors.push(`Mínimo de ${MIN_LENGTH} caracteres.`);
+  if (!criteria.uppercase) errors.push("Ao menos 1 letra maiúscula.");
+  if (!criteria.lowercase) errors.push("Ao menos 1 letra minúscula.");
+  if (!criteria.number) errors.push("Ao menos 1 número.");
+  if (!criteria.special) errors.push("Ao menos 1 caractere especial (!@#$%^&*). ");
 
   return {
     isValid: errors.length === 0,
     errors,
+    criteria,
   };
-}
-
-export function getPasswordStrength(password: string): "weak" | "fair" | "good" | "strong" {
-  let strength = 0;
-
-  if (password.length >= passwordRules.minLength) strength++;
-  if (/[A-Z]/.test(password)) strength++;
-  if (/[a-z]/.test(password)) strength++;
-  if (/\d/.test(password)) strength++;
-  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) strength++;
-
-  if (strength <= 1) return "weak";
-  if (strength <= 2) return "fair";
-  if (strength <= 3) return "good";
-  return "strong";
 }

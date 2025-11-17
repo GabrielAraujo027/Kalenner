@@ -1,16 +1,17 @@
 import { createContext, ReactNode, useEffect, useState } from "react";
+import { api, AuthRequest } from "@/services/api";
 
 interface User {
   email: string;
   roles: string[];
-  companyId: string;
+  companyId: number;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string, companyId: string) => Promise<void>;
-  signup: (email: string, password: string, companyId: string, role: string) => Promise<void>;
+  login: (email: string, password: string, companyId: number) => Promise<void>;
+  register: (email: string, password: string, companyId: number) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -26,57 +27,41 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar se há um usuário logado no localStorage
     const token = localStorage.getItem("kalenner_token");
     const email = localStorage.getItem("kalenner_email");
     const roles = localStorage.getItem("kalenner_roles");
-    const companyId = localStorage.getItem("kalenner_company_id");
+    const companyIdRaw = localStorage.getItem("kalenner_company_id");
 
-    if (token && email && roles && companyId) {
+    if (token && email && roles && companyIdRaw) {
       setUser({
         email,
         roles: JSON.parse(roles),
-        companyId,
+        companyId: Number(companyIdRaw),
       });
     }
     setLoading(false);
   }, []);
 
-  const login = async (email: string, password: string, companyId: string) => {
-    // Simulação de login - em produção, fazer chamada à API
-    // Por enquanto, vamos simular um login bem-sucedido
-    const mockUser: User = {
+  const login = async (email: string, password: string, companyId: number) => {
+    const payload: AuthRequest = { email, password, companyId };
+    const { token } = await api.login(payload);
+
+    const loggedUser: User = {
       email,
-      roles: ["Empresa"], // ou ["Cliente"] dependendo do tipo de usuário
+      roles: [],
       companyId,
     };
 
-    // Salvar no localStorage
-    localStorage.setItem("kalenner_token", "mock-token-" + Date.now());
+    localStorage.setItem("kalenner_token", token);
     localStorage.setItem("kalenner_email", email);
-    localStorage.setItem("kalenner_roles", JSON.stringify(mockUser.roles));
-    localStorage.setItem("kalenner_company_id", companyId);
-    localStorage.setItem("kalenner_token_expires", String(Date.now() + 24 * 60 * 60 * 1000));
-
-    setUser(mockUser);
+    localStorage.setItem("kalenner_roles", JSON.stringify(loggedUser.roles));
+    localStorage.setItem("kalenner_company_id", String(companyId));
+    setUser(loggedUser);
   };
 
-  const signup = async (email: string, password: string, companyId: string, role: string) => {
-    // Simulação de cadastro - em produção, fazer chamada à API
-    const mockUser: User = {
-      email,
-      roles: [role],
-      companyId,
-    };
-
-    // Salvar no localStorage
-    localStorage.setItem("kalenner_token", "mock-token-" + Date.now());
-    localStorage.setItem("kalenner_email", email);
-    localStorage.setItem("kalenner_roles", JSON.stringify(mockUser.roles));
-    localStorage.setItem("kalenner_company_id", companyId);
-    localStorage.setItem("kalenner_token_expires", String(Date.now() + 24 * 60 * 60 * 1000));
-
-    setUser(mockUser);
+  const register = async (email: string, password: string, companyId: number) => {
+    const payload: AuthRequest = { email, password, companyId };
+    await api.register(payload);
   };
 
   const logout = () => {
@@ -85,6 +70,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.removeItem("kalenner_roles");
     localStorage.removeItem("kalenner_company_id");
     localStorage.removeItem("kalenner_token_expires");
+    api.clearToken();
     setUser(null);
   };
 
@@ -94,7 +80,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user,
         loading,
         login,
-        signup,
+        register,
         logout,
         isAuthenticated: !!user,
       }}

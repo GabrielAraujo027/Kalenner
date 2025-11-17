@@ -20,7 +20,8 @@ class ApiService {
    * Obter o token JWT do localStorage
    */
   private getToken(): string | null {
-    return localStorage.getItem("authToken");
+    // Unificar armazenamento (kalenner_token é usado em AuthContext)
+    return localStorage.getItem("kalenner_token") || localStorage.getItem("authToken");
   }
 
   /**
@@ -93,14 +94,28 @@ class ApiService {
    * Salvar token no localStorage
    */
   setToken(token: string): void {
-    localStorage.setItem("authToken", token);
+    localStorage.setItem("kalenner_token", token);
   }
 
   /**
    * Remover token do localStorage
    */
   clearToken(): void {
+    localStorage.removeItem("kalenner_token");
     localStorage.removeItem("authToken");
+  }
+
+  // --- Domain specific helpers ---
+  async getCompanyBySlug(slug: string): Promise<CompanyFullResponse> {
+    return this.get<CompanyFullResponse>(`/Companies/${slug}`);
+  }
+
+  async login(data: AuthRequest): Promise<LoginResponse> {
+    return this.post<LoginResponse>(`/Auth/login`, data);
+  }
+
+  async register(data: AuthRequest): Promise<RegisterResponse> {
+    return this.post<RegisterResponse>(`/Auth/register`, data);
   }
 }
 
@@ -109,16 +124,19 @@ export const api = new ApiService();
 /**
  * Tipos de resposta da API
  */
-export interface LoginResponse {
-  token: string;
-  expiresAt: string;
+// Request usado para login e cadastro
+export interface AuthRequest {
   email: string;
-  roles: string[];
-  companyId: string;
+  password: string;
+  companyId: number; // conforme retorno de Companies/{slug}
+}
+
+export interface LoginResponse {
+  token: string; // retorno simplificado informado pelo usuário
 }
 
 export interface RegisterResponse {
-  message: string;
+  message?: string;
 }
 
 export interface AppointmentResponse {
@@ -151,9 +169,21 @@ export interface ProfessionalResponse {
   companyId: string;
 }
 
-export interface CompanyResponse {
-  id: string;
+export interface CompanyFullResponse {
+  id: number;
   name: string;
-  description: string;
+  slug: string;
+  logoUrl: string;
+  primaryColor: string;
+  secondaryColor: string;
+  timeZone: string;
+  address: string;
+  city: string;
+  state: string;
+  corporateName: string;
+  cnpj: string;
+  phone: string;
   email: string;
+  createdAt: string;
+  updatedAt: string;
 }

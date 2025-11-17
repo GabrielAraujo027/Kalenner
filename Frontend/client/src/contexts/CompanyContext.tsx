@@ -1,21 +1,30 @@
-import { createContext, ReactNode, useState } from "react";
+import { createContext, ReactNode, useState, useCallback, useRef } from "react";
+import { api, CompanyFullResponse } from "@/services/api";
 
 export interface CompanyData {
-  id: string;
+  id: number;
   name: string;
-  logo: string;
+  slug: string;
+  logoUrl: string;
   primaryColor: string;
   secondaryColor: string;
-  accentColor: string;
-  email: string;
-  phone: string;
+  timeZone: string;
   address: string;
+  city: string;
+  state: string;
+  corporateName: string;
+  cnpj: string;
+  phone: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface CompanyContextType {
   company: CompanyData | null;
   setCompany: (company: CompanyData) => void;
   loading: boolean;
+  error: string | null;
   fetchCompany: (companySlug: string) => Promise<void>;
 }
 
@@ -28,43 +37,38 @@ interface CompanyProviderProps {
 export function CompanyProvider({ children }: CompanyProviderProps) {
   const [company, setCompany] = useState<CompanyData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  // Mantém registro de slugs já tentados (sucesso ou erro) para evitar loops
+  const attemptedSlugsRef = useRef<Set<string>>(new Set());
 
-  const fetchCompany = async (companySlug: string) => {
+  const fetchCompany = useCallback(async (companySlug: string) => {
+    if (!companySlug) return;
+    // Se já tentamos esse slug, não refaz
+    if (attemptedSlugsRef.current.has(companySlug)) return;
+    // Evita refetch se mesma empresa carregada
+    if (company && company.slug === companySlug) return;
     setLoading(true);
+    setError(null);
     try {
-      // Simulação de chamada à API
-      // Em produção: const response = await fetch(`/api/companies/${companySlug}`);
-      // const data = await response.json();
-      
-      const mockCompanyData: CompanyData = {
-        id: companySlug,
-        name: companySlug.charAt(0).toUpperCase() + companySlug.slice(1),
-        logo: "/kalenner-logo.png",
-        primaryColor: "oklch(0.45 0.15 250)",
-        secondaryColor: "oklch(0.98 0.001 286.375)",
-        accentColor: "oklch(0.55 0.18 250)",
-        email: `contact@${companySlug}.com`,
-        phone: "(11) 98765-4321",
-        address: "123 Business Street, City, State"
-      };
-
-      setCompany(mockCompanyData);
-    } catch (error) {
-      console.error("Error fetching company:", error);
+      const data = await api.getCompanyBySlug(companySlug);
+      setCompany(data);
+      attemptedSlugsRef.current.add(companySlug);
+      if (data.primaryColor) {
+        const root = document.documentElement;
+        root.style.setProperty("--primary-color", data.primaryColor);
+        root.style.setProperty("--secondary-color", data.secondaryColor || "#ffffff");
+      }
+    } catch (e: any) {
+      setError(e.message || "Falha ao carregar empresa");
+      setCompany(null);
+      attemptedSlugsRef.current.add(companySlug); // marca como tentado mesmo com erro
     } finally {
       setLoading(false);
     }
-  };
+  }, [company]);
 
   return (
-    <CompanyContext.Provider
-      value={{
-        company,
-        setCompany,
-        loading,
-        fetchCompany,
-      }}
-    >
+    <CompanyContext.Provider value={{ company, setCompany, loading, error, fetchCompany }}>
       {children}
     </CompanyContext.Provider>
   );

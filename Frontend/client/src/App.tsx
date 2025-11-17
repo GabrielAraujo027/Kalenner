@@ -26,10 +26,10 @@ function Router() {
       <Route path={"/login"} component={Login} />
       <Route path={"/signup"} component={Signup} />
       <Route path={"/forgot-password"} component={ForgotPassword} />
-      <Route path={"/:company/login"} component={Login} />
+  <Route path={"/:company/login"} component={Login} />
       <Route path={"/:company/company-login"} component={CompanyLogin} />
       <Route path={"/:company/user-login"} component={UserLogin} />
-      <Route path={"/:company/signup"} component={Signup} />
+  <Route path={"/:company/signup"} component={Signup} />
       <Route path={"/:company/forgot-password"} component={ForgotPassword} />
       <Route path={"/my-appointments"}>
         {() => (

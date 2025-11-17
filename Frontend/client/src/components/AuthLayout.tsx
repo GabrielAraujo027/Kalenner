@@ -1,5 +1,5 @@
 import { APP_LOGO, APP_TITLE } from "@/const";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { CompanyData } from "@/contexts/CompanyContext";
 
 interface AuthLayoutProps {
@@ -8,12 +8,20 @@ interface AuthLayoutProps {
 }
 
 export default function AuthLayout({ children, company }: AuthLayoutProps) {
+  const [logoError, setLogoError] = useState(false);
+  // Simples: se for um link do GitHub com "/blob/", converte para raw, senão usa como veio.
+  const requestedLogo = company?.logoUrl
+    ? company.logoUrl.includes("github.com/")
+      ? company.logoUrl.replace("github.com/", "raw.githubusercontent.com/").replace("/blob/", "/")
+      : company.logoUrl
+    : "";
+  const logoSrc = !logoError && requestedLogo ? requestedLogo : APP_LOGO;
   return (
     <div className="min-h-screen flex">
       {/* Lado Esquerdo - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex-col justify-center items-center p-12" style={company ? { backgroundImage: `linear-gradient(135deg, ${company.primaryColor}, ${company.accentColor})` } : {}}>
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex-col justify-center items-center p-12" style={company ? { backgroundImage: `linear-gradient(135deg, ${company.primaryColor}, ${company.secondaryColor})` } : {}}>
         <div className="max-w-md text-center space-y-6">
-          <img src={company?.logo || APP_LOGO} alt={company?.name || APP_TITLE} className="h-32 w-32 mx-auto object-contain" />
+          <img src={logoSrc} alt={company?.name || APP_TITLE} className="h-32 w-32 mx-auto object-contain" loading="lazy" decoding="async" onError={() => setLogoError(true)} />
           <h1 className="text-5xl font-bold">{company?.name || APP_TITLE}</h1>
           <p className="text-xl text-primary-foreground/90">
             Complete scheduling system for your business
@@ -40,7 +48,7 @@ export default function AuthLayout({ children, company }: AuthLayoutProps) {
         <div className="w-full max-w-md">
           {/* Logo Mobile */}
           <div className="lg:hidden text-center mb-8">
-            <img src={company?.logo || APP_LOGO} alt={company?.name || APP_TITLE} className="h-20 w-20 mx-auto object-contain mb-4" />
+            <img src={logoSrc} alt={company?.name || APP_TITLE} className="h-20 w-20 mx-auto object-contain mb-4" loading="lazy" decoding="async" onError={() => setLogoError(true)} />
             <h2 className="text-2xl font-bold text-foreground">{company?.name || APP_TITLE}</h2>
           </div>
           
