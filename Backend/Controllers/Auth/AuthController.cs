@@ -40,21 +40,24 @@ namespace Kalenner.Controllers.Auth
         {
             var exists = await _db.Users
                 .AsNoTracking()
-                .AnyAsync(u => u.Email == dto.Email && u.Company.Id == dto.CompanyId);
+                .AnyAsync(u => u.Email == dto.Email && u.CompanyId == dto.CompanyId);
 
             if (exists)
-                return BadRequest(new { error = "Já existe um usuário com este email para a empresa informada." });
+                return BadRequest(new { error = "Já existe um usuário com este email." });
 
-            Company company = await _db.Companies.FirstOrDefaultAsync(c => c.Id == dto.CompanyId);
+            var companyExists = await _db.Companies
+                .AsNoTracking()
+                .AnyAsync(c => c.Id == dto.CompanyId);
 
-            if (company == null)
+            if (!companyExists)
                 return BadRequest(new { error = "Empresa inválida." });
 
             var user = new ApplicationUser
             {
-                UserName = dto.Email,
+                // Use only Identity-allowed chars and keep uniqueness per company
+                UserName = $"{dto.Email}-cid{dto.CompanyId}",
                 Email = dto.Email,
-                Company = company
+                CompanyId = dto.CompanyId
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
@@ -74,21 +77,24 @@ namespace Kalenner.Controllers.Auth
         {
             var exists = await _db.Users
                 .AsNoTracking()
-                .AnyAsync(u => u.Email == dto.Email && u.Company.Id == dto.CompanyId);
+                .AnyAsync(u => u.Email == dto.Email && u.CompanyId == dto.CompanyId);
 
             if (exists)
                 return BadRequest(new { error = "Já existe um usuário com este email para a empresa informada." });
 
-            Company company = await _db.Companies.FirstOrDefaultAsync(c => c.Id == dto.CompanyId);
+            var companyExists = await _db.Companies
+                .AsNoTracking()
+                .AnyAsync(c => c.Id == dto.CompanyId);
 
-            if (company == null)
+            if (!companyExists)
                 return BadRequest(new { error = "Empresa inválida." });
 
             var user = new ApplicationUser
             {
-                UserName = dto.Email,
+                // Use only Identity-allowed chars and keep uniqueness per company
+                UserName = $"{dto.Email}-cid{dto.CompanyId}",
                 Email = dto.Email,
-                Company = company
+                CompanyId = dto.CompanyId
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
