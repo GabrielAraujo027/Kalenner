@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useCompany } from "@/hooks/useCompany";
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
-import AuthLayout from "@/components/AuthLayout";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { validatePassword, getPasswordStrength } from "@/lib/passwordValidator";
+import AuthLayout from "@/components/AuthLayout";
+import { api, RegisterResponse } from "@/services/api";
 
 export default function Signup() {
   const [, navigate] = useLocation();
@@ -62,14 +63,17 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      // Simulating API call
-      // In production: const response = await fetch(`/api/auth/signup`, { ... });
-      await signup(email, password, company?.id || "default", role);
-      toast.success("Account created successfully!");
-      navigate("/dashboard");
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Signup error";
-      toast.error(errorMessage);
+      const data = await api.post<RegisterResponse>("/auth/register", { email, password });
+
+      toast("Cadastro realizado!", {
+        description: data?.message || "Você já pode fazer login",
+      });
+      navigate("/login", { replace: true });
+    } catch (error) {
+      const description = error instanceof Error ? error.message : "Erro ao cadastrar usuário";
+      toast.error("Erro ao cadastrar", {
+        description,
+      });
     } finally {
       setLoading(false);
     }
