@@ -63,7 +63,7 @@ const ClientDashboard = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar userType="client" />
+      <Sidebar userRole="Cliente" />
 
       <main className="flex-1 p-8">
         <div className="max-w-7xl mx-auto">
