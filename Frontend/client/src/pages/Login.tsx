@@ -41,9 +41,9 @@ export default function Login() {
         toast.error("Empresa não carregada");
         return;
       }
-      await login(email, password, company.id);
-      toast.success("Login successful!");
-      navigate("/dashboard");
+  await login(email, password, company.id);
+  toast.success("Login successful!");
+  navigate(`/${company.slug}/dashboard`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Login error";
       toast.error(errorMessage);

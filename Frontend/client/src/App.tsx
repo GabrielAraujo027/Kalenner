@@ -18,6 +18,7 @@ import Configuracoes from "./pages/Configuracoes";
 import Servicos from "./pages/Servicos";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
+import { TenantGate } from "./components/TenantGate";
 
 function Router() {
   return (
@@ -26,11 +27,41 @@ function Router() {
       <Route path={"/login"} component={Login} />
       <Route path={"/signup"} component={Signup} />
       <Route path={"/forgot-password"} component={ForgotPassword} />
-  <Route path={"/:company/login"} component={Login} />
-      <Route path={"/:company/company-login"} component={CompanyLogin} />
-      <Route path={"/:company/user-login"} component={UserLogin} />
-  <Route path={"/:company/signup"} component={Signup} />
-      <Route path={"/:company/forgot-password"} component={ForgotPassword} />
+      <Route path={"/:company/login"}>
+        {() => (
+          <TenantGate>
+            <Login />
+          </TenantGate>
+        )}
+      </Route>
+      <Route path={"/:company/company-login"}>
+        {() => (
+          <TenantGate>
+            <CompanyLogin />
+          </TenantGate>
+        )}
+      </Route>
+      <Route path={"/:company/user-login"}>
+        {() => (
+          <TenantGate>
+            <UserLogin />
+          </TenantGate>
+        )}
+      </Route>
+      <Route path={"/:company/signup"}>
+        {() => (
+          <TenantGate>
+            <Signup />
+          </TenantGate>
+        )}
+      </Route>
+      <Route path={"/:company/forgot-password"}>
+        {() => (
+          <TenantGate>
+            <ForgotPassword />
+          </TenantGate>
+        )}
+      </Route>
       <Route path={"/my-appointments"}>
         {() => (
           <ProtectedRoute>
@@ -45,12 +76,30 @@ function Router() {
           </ProtectedRoute>
         )}
       </Route>
+      <Route path={"/:company/dashboard"}>
+        {() => (
+          <TenantGate>
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          </TenantGate>
+        )}
+      </Route>
 
       <Route path={"/colaboradores"}>
         {() => (
           <ProtectedRoute requiredRole="Empresa">
             <Colaboradores />
           </ProtectedRoute>
+        )}
+      </Route>
+      <Route path={"/:company/colaboradores"}>
+        {() => (
+          <TenantGate>
+            <ProtectedRoute requiredRole="Empresa">
+              <Colaboradores />
+            </ProtectedRoute>
+          </TenantGate>
         )}
       </Route>
       <Route path={"/configuracoes"}>
@@ -60,6 +109,15 @@ function Router() {
           </ProtectedRoute>
         )}
       </Route>
+      <Route path={"/:company/configuracoes"}>
+        {() => (
+          <TenantGate>
+            <ProtectedRoute>
+              <Configuracoes />
+            </ProtectedRoute>
+          </TenantGate>
+        )}
+      </Route>
       <Route path={"/servicos"}>
         {() => (
           <ProtectedRoute requiredRole="Empresa">
@@ -67,11 +125,22 @@ function Router() {
           </ProtectedRoute>
         )}
       </Route>
+      <Route path={"/:company/servicos"}>
+        {() => (
+          <TenantGate>
+            <ProtectedRoute requiredRole="Empresa">
+              <Servicos />
+            </ProtectedRoute>
+          </TenantGate>
+        )}
+      </Route>
       <Route path={"/:company/my-appointments"}>
         {() => (
-          <ProtectedRoute>
-            <UserAppointments />
-          </ProtectedRoute>
+          <TenantGate>
+            <ProtectedRoute>
+              <UserAppointments />
+            </ProtectedRoute>
+          </TenantGate>
         )}
       </Route>
       <Route path={"/404"} component={NotFound} />

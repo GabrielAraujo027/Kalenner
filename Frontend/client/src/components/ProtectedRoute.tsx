@@ -1,6 +1,7 @@
 import { ReactNode, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useCompanySlug } from "@/hooks/useCompanySlug";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -10,14 +11,15 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const [, navigate] = useLocation();
+  const slug = useCompanySlug();
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate("/login");
+      navigate(slug ? `/${slug}/login` : "/login");
     } else if (!loading && user && requiredRole && !user.roles.includes(requiredRole)) {
-      navigate("/dashboard");
+      navigate(slug ? `/${slug}/dashboard` : "/dashboard");
     }
-  }, [user, loading, requiredRole, navigate]);
+  }, [user, loading, requiredRole, navigate, slug]);
 
   if (loading) {
     return (

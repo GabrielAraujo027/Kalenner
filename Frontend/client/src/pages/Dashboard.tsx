@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
+import { useCompanySlug } from "@/hooks/useCompanySlug";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ interface Appointment {
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const [, navigate] = useLocation();
+  const slug = useCompanySlug();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -57,7 +59,7 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate(slug ? `/${slug}/login` : "/login");
   };
 
   // Mock data

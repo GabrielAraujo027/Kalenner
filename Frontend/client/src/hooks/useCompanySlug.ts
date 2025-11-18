@@ -1,9 +1,11 @@
 import { useMemo } from "react";
+import { useLocation } from "wouter";
 
-// Simple slug detector from URL first segment
+// Slug = primeiro segmento do path, atualiza conforme a navegação do wouter
 export function useCompanySlug() {
+  const [location] = useLocation();
   return useMemo(() => {
-    const segments = window.location.pathname.split("/").filter(Boolean);
+    const segments = location.split("/").filter(Boolean);
     return segments.length > 0 ? segments[0] : "";
-  }, [window.location.pathname]);
+  }, [location]);
 }

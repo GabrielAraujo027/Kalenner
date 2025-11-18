@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useCompany } from "@/hooks/useCompany";
+import { useCompanySlug } from "@/hooks/useCompanySlug";
 
 interface HeaderProps {
   onLogout?: () => void;
@@ -13,6 +15,18 @@ interface HeaderProps {
 export default function Header({ onLogout, showMenu = false, onMenuToggle }: HeaderProps) {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { company } = useCompany();
+  const slug = useCompanySlug();
+
+  const logoSrc = useMemo(() => {
+    if (company?.logoUrl) {
+      const requested = company.logoUrl.includes("github.com/")
+        ? company.logoUrl.replace("github.com/", "raw.githubusercontent.com/").replace("/blob/", "/")
+        : company.logoUrl;
+      return requested;
+    }
+    return APP_LOGO;
+  }, [company]);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -24,10 +38,10 @@ export default function Header({ onLogout, showMenu = false, onMenuToggle }: Hea
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo e Título */}
-          <Link href="/">
+          <Link href={slug ? `/${slug}/dashboard` : "/"}>
             <div className="flex items-center gap-3 cursor-pointer">
-              <img src={APP_LOGO} alt={APP_TITLE} className="h-10 w-10 object-contain" />
-              <h1 className="text-xl font-bold hidden sm:block">{APP_TITLE}</h1>
+              <img src={logoSrc} alt={company?.name || APP_TITLE} className="h-10 w-10 object-contain" />
+              <h1 className="text-xl font-bold hidden sm:block">{company?.name || APP_TITLE}</h1>
             </div>
           </Link>
 
@@ -35,22 +49,22 @@ export default function Header({ onLogout, showMenu = false, onMenuToggle }: Hea
           <nav className="hidden md:flex items-center gap-6">
             {onLogout && (
               <>
-                <Link href="/dashboard">
+                <Link href={slug ? `/${slug}/dashboard` : "/dashboard"}>
                   <span className={`hover:text-primary-foreground/80 cursor-pointer ${location === "/dashboard" ? "font-bold" : ""}`}>
                     Dashboard
                   </span>
                 </Link>
-                <Link href="/compromissos">
+                <Link href={slug ? `/${slug}/compromissos` : "/compromissos"}>
                   <span className={`hover:text-primary-foreground/80 cursor-pointer ${location === "/compromissos" ? "font-bold" : ""}`}>
                     Compromissos
                   </span>
                 </Link>
-                <Link href="/colaboradores">
+                <Link href={slug ? `/${slug}/colaboradores` : "/colaboradores"}>
                   <span className={`hover:text-primary-foreground/80 cursor-pointer ${location === "/colaboradores" ? "font-bold" : ""}`}>
                     Colaboradores
                   </span>
                 </Link>
-                <Link href="/configuracoes">
+                <Link href={slug ? `/${slug}/configuracoes` : "/configuracoes"}>
                   <span className={`hover:text-primary-foreground/80 cursor-pointer ${location === "/configuracoes" ? "font-bold" : ""}`}>
                     Configurações
                   </span>
@@ -71,12 +85,12 @@ export default function Header({ onLogout, showMenu = false, onMenuToggle }: Hea
               </Button>
             ) : (
               <div className="hidden md:flex gap-2">
-                <Link href="/login">
+                <Link href={slug ? `/${slug}/login` : "/login"}>
                   <Button variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">
                     Entrar
                   </Button>
                 </Link>
-                <Link href="/signup">
+                <Link href={slug ? `/${slug}/signup` : "/signup"}>
                   <Button variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
                     Cadastrar
                   </Button>
@@ -102,22 +116,22 @@ export default function Header({ onLogout, showMenu = false, onMenuToggle }: Hea
             <div className="flex flex-col gap-3">
               {onLogout && (
                 <>
-                  <Link href="/dashboard">
+                  <Link href={slug ? `/${slug}/dashboard` : "/dashboard"}>
                     <span className="block py-2 px-4 hover:bg-primary-foreground/10 rounded cursor-pointer">
                       Dashboard
                     </span>
                   </Link>
-                  <Link href="/compromissos">
+                  <Link href={slug ? `/${slug}/compromissos` : "/compromissos"}>
                     <span className="block py-2 px-4 hover:bg-primary-foreground/10 rounded cursor-pointer">
                       Compromissos
                     </span>
                   </Link>
-                  <Link href="/colaboradores">
+                  <Link href={slug ? `/${slug}/colaboradores` : "/colaboradores"}>
                     <span className="block py-2 px-4 hover:bg-primary-foreground/10 rounded cursor-pointer">
                       Colaboradores
                     </span>
                   </Link>
-                  <Link href="/configuracoes">
+                  <Link href={slug ? `/${slug}/configuracoes` : "/configuracoes"}>
                     <span className="block py-2 px-4 hover:bg-primary-foreground/10 rounded cursor-pointer">
                       Configurações
                     </span>
