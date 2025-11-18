@@ -107,74 +107,7 @@ export default function Configuracoes() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Notificações */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Bell className="h-5 w-5 text-primary" />
-              <CardTitle>Notificações</CardTitle>
-            </div>
-            <CardDescription>
-              Configure como deseja receber notificações
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="notif-email" className="text-base">
-                  Notificações por E-mail
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Receba atualizações sobre agendamentos por e-mail
-                </p>
-              </div>
-              <Switch
-                id="notif-email"
-                checked={notificacaoEmail}
-                onCheckedChange={setNotificacaoEmail}
-              />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="notif-sms" className="text-base">
-                  Notificações por SMS
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Receba lembretes de agendamentos por SMS
-                </p>
-              </div>
-              <Switch
-                id="notif-sms"
-                checked={notificacaoSMS}
-                onCheckedChange={setNotificacaoSMS}
-              />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="notif-lembrete" className="text-base">
-                  Lembretes Automáticos
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Enviar lembretes automáticos 24h antes do agendamento
-                </p>
-              </div>
-              <Switch
-                id="notif-lembrete"
-                checked={notificacaoLembrete}
-                onCheckedChange={setNotificacaoLembrete}
-              />
-            </div>
-            <div className="flex justify-end pt-4">
-              <Button onClick={handleSalvarNotificacoes}>
-                Salvar Preferências
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
+        
         {/* Segurança */}
         <Card>
           <CardHeader>
