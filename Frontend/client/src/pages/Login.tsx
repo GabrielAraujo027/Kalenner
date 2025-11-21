@@ -118,14 +118,7 @@ export default function Login() {
           </div>
 
           <div className="text-center space-y-3 pt-2">
-            <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link href={`/${company?.slug || ""}/signup`}>
-                <span className="font-medium text-primary hover:underline cursor-pointer">
-                  Sign up here!
-                </span>
-              </Link>
-            </p>
+
             <Link href={`/${company?.slug || ""}/forgot-password`}>
               <span className="block text-sm text-destructive font-medium hover:underline cursor-pointer">
                 Forgot your password?

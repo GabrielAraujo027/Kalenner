@@ -6,15 +6,15 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { CompanyProvider } from "./contexts/CompanyContext";
 import Login from "./pages/Login";
-import CompanyLogin from "./pages/CompanyLogin";
-import UserLogin from "./pages/UserLogin";
-import UserAppointments from "./pages/UserAppointments";
-import Signup from "./pages/Signup";
+
+
+
+
 import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 
 import Colaboradores from "./pages/Colaboradores";
-import Configuracoes from "./pages/Configuracoes";
+
 import Servicos from "./pages/Servicos";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -25,7 +25,7 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Login} />
       <Route path={"/login"} component={Login} />
-      <Route path={"/signup"} component={Signup} />
+
       <Route path={"/forgot-password"} component={ForgotPassword} />
       <Route path={"/:company/login"}>
         {() => (
@@ -34,27 +34,9 @@ function Router() {
           </TenantGate>
         )}
       </Route>
-      <Route path={"/:company/company-login"}>
-        {() => (
-          <TenantGate>
-            <CompanyLogin />
-          </TenantGate>
-        )}
-      </Route>
-      <Route path={"/:company/user-login"}>
-        {() => (
-          <TenantGate>
-            <UserLogin />
-          </TenantGate>
-        )}
-      </Route>
-      <Route path={"/:company/signup"}>
-        {() => (
-          <TenantGate>
-            <Signup />
-          </TenantGate>
-        )}
-      </Route>
+
+
+
       <Route path={"/:company/forgot-password"}>
         {() => (
           <TenantGate>
@@ -62,13 +44,7 @@ function Router() {
           </TenantGate>
         )}
       </Route>
-      <Route path={"/my-appointments"}>
-        {() => (
-          <ProtectedRoute>
-            <UserAppointments />
-          </ProtectedRoute>
-        )}
-      </Route>
+
       <Route path={"/dashboard"}>
         {() => (
           <ProtectedRoute>
@@ -102,22 +78,7 @@ function Router() {
           </TenantGate>
         )}
       </Route>
-      <Route path={"/configuracoes"}>
-        {() => (
-          <ProtectedRoute>
-            <Configuracoes />
-          </ProtectedRoute>
-        )}
-      </Route>
-      <Route path={"/:company/configuracoes"}>
-        {() => (
-          <TenantGate>
-            <ProtectedRoute>
-              <Configuracoes />
-            </ProtectedRoute>
-          </TenantGate>
-        )}
-      </Route>
+
       <Route path={"/servicos"}>
         {() => (
           <ProtectedRoute requiredRole="Empresa">
@@ -134,15 +95,7 @@ function Router() {
           </TenantGate>
         )}
       </Route>
-      <Route path={"/:company/my-appointments"}>
-        {() => (
-          <TenantGate>
-            <ProtectedRoute>
-              <UserAppointments />
-            </ProtectedRoute>
-          </TenantGate>
-        )}
-      </Route>
+
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

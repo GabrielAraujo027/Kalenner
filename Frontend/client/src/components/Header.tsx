@@ -45,33 +45,7 @@ export default function Header({ onLogout, showMenu = false, onMenuToggle }: Hea
             </div>
           </Link>
 
-          {/* Menu Desktop */}
-          <nav className="hidden md:flex items-center gap-6">
-            {onLogout && (
-              <>
-                <Link href={slug ? `/${slug}/dashboard` : "/dashboard"}>
-                  <span className={`hover:text-primary-foreground/80 cursor-pointer ${location === "/dashboard" ? "font-bold" : ""}`}>
-                    Dashboard
-                  </span>
-                </Link>
-                <Link href={slug ? `/${slug}/compromissos` : "/compromissos"}>
-                  <span className={`hover:text-primary-foreground/80 cursor-pointer ${location === "/compromissos" ? "font-bold" : ""}`}>
-                    Compromissos
-                  </span>
-                </Link>
-                <Link href={slug ? `/${slug}/colaboradores` : "/colaboradores"}>
-                  <span className={`hover:text-primary-foreground/80 cursor-pointer ${location === "/colaboradores" ? "font-bold" : ""}`}>
-                    Colaboradores
-                  </span>
-                </Link>
-                <Link href={slug ? `/${slug}/configuracoes` : "/configuracoes"}>
-                  <span className={`hover:text-primary-foreground/80 cursor-pointer ${location === "/configuracoes" ? "font-bold" : ""}`}>
-                    Configurações
-                  </span>
-                </Link>
-              </>
-            )}
-          </nav>
+
 
           {/* Botões de Ação */}
           <div className="flex items-center gap-3">
@@ -90,11 +64,7 @@ export default function Header({ onLogout, showMenu = false, onMenuToggle }: Hea
                     Entrar
                   </Button>
                 </Link>
-                <Link href={slug ? `/${slug}/signup` : "/signup"}>
-                  <Button variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                    Cadastrar
-                  </Button>
-                </Link>
+
               </div>
             )}
 
@@ -116,26 +86,6 @@ export default function Header({ onLogout, showMenu = false, onMenuToggle }: Hea
             <div className="flex flex-col gap-3">
               {onLogout && (
                 <>
-                  <Link href={slug ? `/${slug}/dashboard` : "/dashboard"}>
-                    <span className="block py-2 px-4 hover:bg-primary-foreground/10 rounded cursor-pointer">
-                      Dashboard
-                    </span>
-                  </Link>
-                  <Link href={slug ? `/${slug}/compromissos` : "/compromissos"}>
-                    <span className="block py-2 px-4 hover:bg-primary-foreground/10 rounded cursor-pointer">
-                      Compromissos
-                    </span>
-                  </Link>
-                  <Link href={slug ? `/${slug}/colaboradores` : "/colaboradores"}>
-                    <span className="block py-2 px-4 hover:bg-primary-foreground/10 rounded cursor-pointer">
-                      Colaboradores
-                    </span>
-                  </Link>
-                  <Link href={slug ? `/${slug}/configuracoes` : "/configuracoes"}>
-                    <span className="block py-2 px-4 hover:bg-primary-foreground/10 rounded cursor-pointer">
-                      Configurações
-                    </span>
-                  </Link>
                   <button
                     onClick={onLogout}
                     className="text-left py-2 px-4 hover:bg-primary-foreground/10 rounded"

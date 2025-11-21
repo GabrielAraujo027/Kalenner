@@ -14,11 +14,11 @@ export default function Sidebar({ userRole }: SidebarProps) {
 
   const menuItems = [
     { href: "/dashboard", icon: Home, label: "Dashboard", roles: ["Empresa", "Cliente"] },
-    { href: "/compromissos", icon: Calendar, label: "Compromissos", roles: ["Empresa", "Cliente"] },
+
     { href: "/colaboradores", icon: Users, label: "Colaboradores", roles: ["Empresa"] },
     { href: "/servicos", icon: Briefcase, label: "Serviços", roles: ["Empresa"] },
     { href: "/perfil", icon: User, label: "Perfil", roles: ["Empresa", "Cliente"] },
-    { href: "/configuracoes", icon: Settings, label: "Configurações", roles: ["Empresa"] },
+
   ];
 
   const filteredItems = menuItems.filter(item => 
@@ -47,33 +47,26 @@ export default function Sidebar({ userRole }: SidebarProps) {
           <span>Painel Principal</span>
         </a>
 
-  {userRole === "Empresa" && (
-          <>
-            <a
-              href={slug ? `/${slug}/colaboradores` : "/colaboradores"}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors"
-            >
-              <User className="w-5 h-5" />
-              <span>Cadastro</span>
-            </a>
-
-            <a
-              href={slug ? `/${slug}/configuracoes` : "/configuracoes"}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors"
-            >
-              <Settings className="w-5 h-5" />
-              <span>Configurações</span>
-            </a>
-          </>
+        {userRole === "Empresa" && (
+          <a
+            href={slug ? `/${slug}/colaboradores` : "/colaboradores"}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors"
+          >
+            <Users className="w-5 h-5" />
+            <span>Colaboradores</span>
+          </a>
         )}
 
-        <a
-          href={slug ? `/${slug}/compromisso` : "/compromisso"}
-          className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors"
-        >
-          <Calendar className="w-5 h-5" />
-          <span>Agendamentos</span>
-        </a>
+        {userRole === "Empresa" && (
+          <a
+            href={slug ? `/${slug}/servicos` : "/servicos"}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-sidebar-accent transition-colors"
+          >
+            <Briefcase className="w-5 h-5" />
+            <span>Serviços</span>
+          </a>
+        )}
+
       </nav>
     </aside>
   );
