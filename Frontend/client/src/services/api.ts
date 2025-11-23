@@ -1,5 +1,5 @@
 /**
- * Serviço de API para comunicação com o backend
+ * Serviço de API base para comunicação com o backend
  * Configurar a URL base do backend nas variáveis de ambiente
  */
 
@@ -84,6 +84,16 @@ class ApiService {
   }
 
   /**
+   * PATCH request
+   */
+  async patch<T>(endpoint: string, data?: unknown): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: "PATCH",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  /**
    * DELETE request
    */
   async delete<T>(endpoint: string): Promise<T> {
@@ -104,86 +114,6 @@ class ApiService {
     localStorage.removeItem("kalenner_token");
     localStorage.removeItem("authToken");
   }
-
-  // --- Domain specific helpers ---
-  async getCompanyBySlug(slug: string): Promise<CompanyFullResponse> {
-    return this.get<CompanyFullResponse>(`/Companies/${slug}`);
-  }
-
-  async login(data: AuthRequest): Promise<LoginResponse> {
-    return this.post<LoginResponse>(`/Auth/login`, data);
-  }
-
-  async register(data: AuthRequest): Promise<RegisterResponse> {
-    return this.post<RegisterResponse>(`/Auth/register`, data);
-  }
 }
 
 export const api = new ApiService();
-
-/**
- * Tipos de resposta da API
- */
-// Request usado para login e cadastro
-export interface AuthRequest {
-  email: string;
-  password: string;
-  companyId: number; // conforme retorno de Companies/{slug}
-}
-
-export interface LoginResponse {
-  token: string; // retorno simplificado informado pelo usuário
-}
-
-export interface RegisterResponse {
-  message?: string;
-}
-
-export interface AppointmentResponse {
-  id: number;
-  serviceId: number;
-  serviceName: string;
-  professionalId: number;
-  professionalName: string;
-  clientId: string;
-  start: string;
-  end: string;
-  status: "scheduled" | "completed" | "cancelled";
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ServiceResponse {
-  id: number;
-  name: string;
-  description: string;
-  duration: number;
-  price: number;
-}
-
-export interface ProfessionalResponse {
-  id: number;
-  name: string;
-  description: string;
-  companyId: string;
-}
-
-export interface CompanyFullResponse {
-  id: number;
-  name: string;
-  slug: string;
-  logoUrl: string;
-  primaryColor: string;
-  secondaryColor: string;
-  timeZone: string;
-  address: string;
-  city: string;
-  state: string;
-  corporateName: string;
-  cnpj: string;
-  phone: string;
-  email: string;
-  createdAt: string;
-  updatedAt: string;
-}
