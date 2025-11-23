@@ -54,7 +54,6 @@ namespace Kalenner.Controllers.Auth
 
             var user = new ApplicationUser
             {
-                // Use only Identity-allowed chars and keep uniqueness per company
                 UserName = $"{dto.Email}-cid{dto.CompanyId}",
                 Email = dto.Email,
                 CompanyId = dto.CompanyId
