@@ -87,6 +87,7 @@ class ApiService {
    * PATCH request
    */
   async patch<T>(endpoint: string, data?: unknown): Promise<T> {
+    console.log('PATCH data:', data, 'stringified:', JSON.stringify(data));
     return this.request<T>(endpoint, {
       method: "PATCH",
       body: data ? JSON.stringify(data) : undefined,

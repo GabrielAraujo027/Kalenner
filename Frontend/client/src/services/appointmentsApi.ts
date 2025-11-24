@@ -23,7 +23,7 @@ export const appointmentsApi = {
   /**
    * Atualiza o status de um agendamento
    */
-  updateAppointmentStatus: (id: number, status: AppointmentStatus): Promise<AppointmentResponse> => {
-    return api.patch<AppointmentResponse>(`/Appointments/${id}/status`, { status });
+  updateAppointmentStatus: (id: number, status: number): Promise<AppointmentResponse> => {
+    return api.patch<AppointmentResponse>(`/Appointments/${id}/status`, status);
   },
 };

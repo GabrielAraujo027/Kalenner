@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useCompanySlug } from "@/hooks/useCompanySlug";
+import { appointmentsApi, servicesApi, professionalsApi } from "@/services";
+import type { AppointmentResponse, ServiceResponse, ProfessionalResponse } from "@/services";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +17,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -35,7 +47,8 @@ interface Appointment {
   professional: string;
   date: string;
   time: string;
-  status: "confirmed" | "pending" | "completed" | "cancelled";
+  duration: number;
+  status: "confirmed" | "pending" | "completed" | "cancelled" | "denied";
   notes: string;
 }
 
@@ -46,13 +59,33 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [appointmentToCancel, setAppointmentToCancel] = useState<number | null>(null);
+
+  // Helper para converter status string para número (enum do backend)
+  const statusToNumber = (status: string): number => {
+    switch (status) {
+      case "scheduled":
+      case "confirmed":
+      case "pending":
+        return 1; // Scheduled
+      case "cancelled":
+        return 2; // Cancelled
+      case "completed":
+        return 3; // Completed
+      case "denied":
+        return 4; // Denied
+      default:
+        return 1;
+    }
+  };
+
+  // Verificar se usuário é cliente
+  const isClient = user?.roles?.[0] === "Cliente";
 
   // Form states
-  const [formClientName, setFormClientName] = useState("");
-  const [formClientEmail, setFormClientEmail] = useState("");
-  const [formClientPhone, setFormClientPhone] = useState("");
-  const [formService, setFormService] = useState("");
-  const [formProfessional, setFormProfessional] = useState("");
+  const [formService, setFormService] = useState<number | null>(null);
+  const [formProfessional, setFormProfessional] = useState<number | null>(null);
   const [formDate, setFormDate] = useState("");
   const [formTime, setFormTime] = useState("");
   const [formNotes, setFormNotes] = useState("");
@@ -62,60 +95,99 @@ export default function Dashboard() {
     navigate(slug ? `/${slug}/login` : "/login");
   };
 
-  // Mock data
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    {
-      id: 1,
-      clientName: "John Smith",
-      clientEmail: "john@example.com",
-      clientPhone: "(11) 98765-4321",
-      service: "Haircut",
-      professional: "Carlos Barbeiro",
-      date: "2024-11-20",
-      time: "10:00",
-      status: "confirmed",
-      notes: "Regular haircut"
-    },
-    {
-      id: 2,
-      clientName: "Maria Silva",
-      clientEmail: "maria@example.com",
-      clientPhone: "(11) 98765-4322",
-      service: "Manicure",
-      professional: "Ana Manicure",
-      date: "2024-11-20",
-      time: "14:00",
-      status: "pending",
-      notes: "French manicure"
-    },
-  ]);
+  // Estado de dados
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [services, setServices] = useState<ServiceResponse[]>([]);
+  const [professionals, setProfessionals] = useState<ProfessionalResponse[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const services = ["Haircut", "Beard", "Manicure", "Pedicure", "Massage", "Facial"];
-  const professionals = ["Carlos Barbeiro", "Ana Manicure", "Paula Massagista", "Carla Esteticista"];
+  // Carregar dados da API
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [appointmentsData, servicesData, professionalsData] = await Promise.all([
+          appointmentsApi.getAppointments(),
+          servicesApi.getServices(),
+          professionalsApi.getProfessionals(),
+        ]);
+        
+        const mappedAppointments: Appointment[] = appointmentsData.map(apt => {
+          const service = servicesData.find(s => s.id === apt.serviceId);
+          return {
+            id: apt.id,
+            clientName: apt.clientId, 
+            clientEmail: "",
+            clientPhone: "",
+            service: apt.serviceName,
+            professional: apt.professionalName,
+            date: new Date(apt.start).toISOString().split('T')[0],
+            time: new Date(apt.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+            duration: service?.duration || 0,
+            status: apt.status === "scheduled" ? "confirmed" : apt.status === "completed" ? "completed" : apt.status === "cancelled" ? "cancelled" : "pending",
+            notes: apt.notes || ""
+          };
+        });
+        
+        setAppointments(mappedAppointments);
+        setServices(servicesData);
+        setProfessionals(professionalsData);
+      } catch (error) {
+        console.error("Failed to load data:", error);
+        toast.error("Failed to load appointments");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []);
 
-  const handleCreateAppointment = () => {
-    if (!formClientName || !formClientEmail || !formService || !formProfessional || !formDate || !formTime) {
+  const handleCreateAppointment = async () => {
+    if (!formService || !formDate || !formTime) {
       toast.error("Please fill in all required fields");
       return;
     }
 
-    const newAppointment: Appointment = {
-      id: appointments.length + 1,
-      clientName: formClientName,
-      clientEmail: formClientEmail,
-      clientPhone: formClientPhone,
-      service: formService,
-      professional: formProfessional,
-      date: formDate,
-      time: formTime,
-      status: "pending",
-      notes: formNotes
-    };
+    try {
+      const selectedService = services.find(s => s.id === formService);
+      
+      if (!selectedService) {
+        toast.error("Invalid service selected");
+        return;
+      }
 
-    setAppointments([...appointments, newAppointment]);
-    toast.success("Appointment created successfully!");
-    setDialogOpen(false);
-    resetForm();
+      const startDateTime = new Date(`${formDate}T${formTime}`);
+
+      const createdAppointment = await appointmentsApi.createAppointment({
+        serviceId: formService,
+        professionalId: formProfessional || undefined,
+        start: startDateTime.toISOString(),
+        notes: formNotes || undefined
+      });
+
+      const newAppointment: Appointment = {
+        id: createdAppointment.id,
+        clientName: createdAppointment.clientId,
+        clientEmail: "",
+        clientPhone: "",
+        service: createdAppointment.serviceName,
+        professional: createdAppointment.professionalName,
+        date: formDate,
+        time: formTime,
+        duration: selectedService.duration,
+        status: "pending",
+        notes: formNotes
+      };
+
+      setAppointments([...appointments, newAppointment]);
+      toast.success("Appointment created successfully!");
+      setDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      console.error("Failed to create appointment:", error);
+      toast.error("Failed to create appointment");
+    }
   };
 
   const handleDeleteAppointment = (id: number) => {
@@ -123,19 +195,50 @@ export default function Dashboard() {
     toast.success("Appointment deleted");
   };
 
-  const handleStatusChange = (id: number, newStatus: Appointment["status"]) => {
-    setAppointments(appointments.map(a =>
-      a.id === id ? { ...a, status: newStatus } : a
-    ));
-    toast.success("Appointment status updated");
+  const handleStatusChange = async (id: number, newStatus: Appointment["status"]) => {
+    // Se for cancelamento, abrir diálogo de confirmação
+    if (newStatus === "cancelled") {
+      setAppointmentToCancel(id);
+      setCancelDialogOpen(true);
+      return;
+    }
+
+    try {
+      const statusNumber = statusToNumber(newStatus);
+      await appointmentsApi.updateAppointmentStatus(id, statusNumber);
+      
+      setAppointments(appointments.map(a =>
+        a.id === id ? { ...a, status: newStatus } : a
+      ));
+      toast.success("Appointment status updated");
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      toast.error("Failed to update appointment status");
+    }
+  };
+
+  const confirmCancellation = async () => {
+    if (!appointmentToCancel) return;
+
+    try {
+      await appointmentsApi.updateAppointmentStatus(appointmentToCancel, 2); // 2 = Cancelled
+      
+      setAppointments(appointments.map(a =>
+        a.id === appointmentToCancel ? { ...a, status: "cancelled" } : a
+      ));
+      toast.success("Appointment cancelled");
+    } catch (error) {
+      console.error("Failed to cancel appointment:", error);
+      toast.error("Failed to cancel appointment");
+    } finally {
+      setCancelDialogOpen(false);
+      setAppointmentToCancel(null);
+    }
   };
 
   const resetForm = () => {
-    setFormClientName("");
-    setFormClientEmail("");
-    setFormClientPhone("");
-    setFormService("");
-    setFormProfessional("");
+    setFormService(null);
+    setFormProfessional(null);
     setFormDate("");
     setFormTime("");
     setFormNotes("");
@@ -186,61 +289,33 @@ export default function Dashboard() {
               <DialogHeader>
                 <DialogTitle>Create New Appointment</DialogTitle>
                 <DialogDescription>
-                  Schedule a new appointment for your client
+                  Schedule a new appointment
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="client-name">Client Name *</Label>
-                  <Input
-                    id="client-name"
-                    placeholder="Full name"
-                    value={formClientName}
-                    onChange={(e) => setFormClientName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="client-email">Email *</Label>
-                  <Input
-                    id="client-email"
-                    type="email"
-                    placeholder="email@example.com"
-                    value={formClientEmail}
-                    onChange={(e) => setFormClientEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="client-phone">Phone</Label>
-                  <Input
-                    id="client-phone"
-                    placeholder="(11) 98765-4321"
-                    value={formClientPhone}
-                    onChange={(e) => setFormClientPhone(e.target.value)}
-                  />
-                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="service">Service *</Label>
-                    <Select value={formService} onValueChange={setFormService}>
+                    <Select value={formService?.toString()} onValueChange={(value) => setFormService(Number(value))}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select" />
+                        <SelectValue placeholder="Select service" />
                       </SelectTrigger>
                       <SelectContent>
                         {services.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                          <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="professional">Professional *</Label>
-                    <Select value={formProfessional} onValueChange={setFormProfessional}>
+                    <Label htmlFor="professional">Professional</Label>
+                    <Select value={formProfessional?.toString()} onValueChange={(value) => setFormProfessional(Number(value))}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select" />
+                        <SelectValue placeholder="Select (optional)" />
                       </SelectTrigger>
                       <SelectContent>
                         {professionals.map((p) => (
-                          <SelectItem key={p} value={p}>{p}</SelectItem>
+                          <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -368,57 +443,90 @@ export default function Dashboard() {
               <Card key={appointment.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="pt-6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg text-foreground">{appointment.clientName}</h3>
+                    <div className="flex-1 space-y-3">
+                      {/* Linha principal: Serviço e Status */}
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-xl font-bold text-foreground">{appointment.service}</h3>
                         <Badge className={getStatusColor(appointment.status)}>
                           {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                         </Badge>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
+                      
+                      {/* Linha de informações: Data, Hora e Duração */}
+                      <div className="flex items-center gap-6 text-base">
+                        <div className="flex items-center gap-2 text-foreground font-semibold">
+                          <Calendar className="h-5 w-5 text-primary" />
+                          <span>{new Date(appointment.date).toLocaleDateString('pt-BR')}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-foreground font-semibold">
+                          <Clock className="h-5 w-5 text-primary" />
+                          <span>{appointment.time}</span>
+                        </div>
+                        {appointment.duration > 0 && (
+                          <div className="text-sm text-muted-foreground">
+                            ({appointment.duration} min)
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Profissional */}
+                      {appointment.professional && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <User className="h-4 w-4" />
                           <span>{appointment.professional}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          <span>{appointment.date}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
-                          <span>{appointment.time}</span>
-                        </div>
-                        <div>
-                          <span className="text-foreground font-medium">{appointment.service}</span>
-                        </div>
-                      </div>
+                      )}
+                      
+                      {/* Notas */}
                       {appointment.notes && (
                         <p className="text-sm text-muted-foreground italic">Note: {appointment.notes}</p>
                       )}
                     </div>
                     <div className="flex gap-2">
-                      <Select
-                        value={appointment.status}
-                        onValueChange={(value) => handleStatusChange(appointment.id, value as Appointment["status"])}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="confirmed">Confirm</SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="completed">Complete</SelectItem>
-                          <SelectItem value="cancelled">Cancel</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteAppointment(appointment.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {/* Se cancelado, apenas mostrar o status */}
+                      {appointment.status === "cancelled" ? (
+                        <Badge className={getStatusColor(appointment.status)} variant="outline">
+                          Cancelled
+                        </Badge>
+                      ) : (
+                        /* Se cliente, só pode cancelar */
+                        isClient ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleStatusChange(appointment.id, "cancelled")}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            Cancel
+                          </Button>
+                        ) : (
+                          /* Se empresa, pode alterar todos os status */
+                          <>
+                            <Select
+                              value={appointment.status}
+                              onValueChange={(value) => handleStatusChange(appointment.id, value as Appointment["status"])}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="confirmed">Confirm</SelectItem>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="completed">Complete</SelectItem>
+                                <SelectItem value="cancelled">Cancel</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteAppointment(appointment.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -427,6 +535,24 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Diálogo de confirmação de cancelamento */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar agendamento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Não</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmCancellation} className="bg-destructive hover:bg-destructive/90">
+              Sim, cancelar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

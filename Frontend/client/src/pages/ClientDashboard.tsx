@@ -1,54 +1,59 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import DailySummary from "@/components/DailySummary";
 import AppointmentCard, { Appointment, AppointmentStatus } from "@/components/AppointmentCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-// Mock data for a specific client
-const mockClientAppointments: Appointment[] = [
-  {
-    id: "1",
-    service: "Corte Completo",
-    clientName: "Você",
-    time: "14:00",
-    date: "25/11/2025",
-    status: "scheduled",
-  },
-  {
-    id: "2",
-    service: "Corte e Barba",
-    clientName: "Você",
-    time: "16:00",
-    date: "15/11/2025",
-    status: "completed",
-  },
-  {
-    id: "3",
-    service: "Somente Barba",
-    clientName: "Você",
-    time: "10:00",
-    date: "05/12/2025",
-    status: "scheduled",
-  },
-];
+import { appointmentsApi } from "@/services";
+import { toast } from "sonner";
 
 const ClientDashboard = () => {
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState<AppointmentStatus | "all">("all");
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredAppointments = mockClientAppointments.filter((appointment) => {
+  // Carregar appointments da API
+  useEffect(() => {
+    const loadAppointments = async () => {
+      try {
+        setLoading(true);
+        const data = await appointmentsApi.getAppointments();
+        
+        // Mapear appointments da API para o formato local
+        const mappedAppointments: Appointment[] = data.map(apt => ({
+          id: apt.id.toString(),
+          service: apt.serviceName,
+          clientName: "Você",
+          time: new Date(apt.start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          date: new Date(apt.start).toLocaleDateString('pt-BR'),
+          status: apt.status as AppointmentStatus,
+        }));
+        
+        setAppointments(mappedAppointments);
+      } catch (error) {
+        console.error("Failed to load appointments:", error);
+        toast.error("Falha ao carregar agendamentos");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadAppointments();
+  }, []);
+
+  const filteredAppointments = appointments.filter((appointment) => {
     const matchesDate = !filterDate || appointment.date.includes(filterDate);
     const matchesStatus = filterStatus === "all" || appointment.status === filterStatus;
     return matchesDate && matchesStatus;
   });
 
-  const todayAppointments = mockClientAppointments.filter(
+  const todayAppointments = appointments.filter(
     (apt) => apt.status === "scheduled" && apt.date === new Date().toLocaleDateString("pt-BR")
   );
 
-  const nextAppointment = mockClientAppointments
+  const nextAppointment = appointments
     .filter((apt) => apt.status === "scheduled")
     .sort((a, b) => {
       const dateA = new Date(a.date.split("/").reverse().join("-"));
@@ -74,7 +79,7 @@ const ClientDashboard = () => {
             <h2 className="text-xl font-semibold mb-4">Resumo</h2>
             <div className="max-w-md">
               <DailySummary
-                count={mockClientAppointments.filter((apt) => apt.status === "scheduled").length}
+                count={appointments.filter((apt) => apt.status === "scheduled").length}
                 nextAppointment={
                   nextAppointment
                     ? {

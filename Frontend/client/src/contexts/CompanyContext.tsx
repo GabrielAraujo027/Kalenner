@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useState, useCallback, useRef } from "react";
-import { api, CompanyFullResponse } from "@/services/api";
+import { companiesApi, type CompanyFullResponse } from "@/services";
 
 export interface CompanyData {
   id: number;
@@ -50,7 +50,7 @@ export function CompanyProvider({ children }: CompanyProviderProps) {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.getCompanyBySlug(companySlug);
+      const data = await companiesApi.getCompanyBySlug(companySlug);
       setCompany(data);
       attemptedSlugsRef.current.add(companySlug);
       if (data.primaryColor) {

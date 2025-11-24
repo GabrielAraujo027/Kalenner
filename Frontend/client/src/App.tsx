@@ -6,10 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { CompanyProvider } from "./contexts/CompanyContext";
 import Login from "./pages/Login";
-
-
-
-
+import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 
@@ -25,12 +22,20 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Login} />
       <Route path={"/login"} component={Login} />
-
+      <Route path={"/signup"} component={Signup} />
       <Route path={"/forgot-password"} component={ForgotPassword} />
       <Route path={"/:company/login"}>
         {() => (
           <TenantGate>
             <Login />
+          </TenantGate>
+        )}
+      </Route>
+
+      <Route path={"/:company/signup"}>
+        {() => (
+          <TenantGate>
+            <Signup />
           </TenantGate>
         )}
       </Route>

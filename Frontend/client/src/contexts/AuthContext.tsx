@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useEffect, useState } from "react";
-import { api, AuthRequest } from "@/services/api";
+import { authApi, api, type AuthRequest } from "@/services";
 
 interface User {
   email: string;
@@ -44,7 +44,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (email: string, password: string, companyId: number) => {
     const payload: AuthRequest = { email, password, companyId };
-    const { token } = await api.login(payload);
+    const { token } = await authApi.login(payload);
 
     const loggedUser: User = {
       email,
@@ -61,7 +61,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const register = async (email: string, password: string, companyId: number) => {
     const payload: AuthRequest = { email, password, companyId };
-    await api.register(payload);
+    await authApi.register(payload);
   };
 
   const logout = () => {
