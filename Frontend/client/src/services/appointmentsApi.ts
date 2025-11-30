@@ -26,4 +26,11 @@ export const appointmentsApi = {
   updateAppointmentStatus: (id: number, status: number): Promise<AppointmentResponse> => {
     return api.patch<AppointmentResponse>(`/Appointments/${id}/status`, status);
   },
+
+  /**
+   * Exclui um agendamento
+   */
+  deleteAppointment: (id: number): Promise<void> => {
+    return api.delete<void>(`/Appointments/${id}`);
+  },
 };

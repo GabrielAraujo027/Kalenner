@@ -200,9 +200,15 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
     }
   };
 
-  const handleDeleteAppointment = (id: number) => {
-    setAppointments(appointments.filter(a => a.id !== id));
-    toast.success("Appointment deleted");
+  const handleDeleteAppointment = async (id: number) => {
+    try {
+      await appointmentsApi.deleteAppointment(id);
+      setAppointments(appointments.filter(a => a.id !== id));
+      toast.success("Appointment deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete appointment:", error);
+      toast.error("Failed to delete appointment");
+    }
   };
 
   const handleStatusChange = async (id: number, newStatus: Appointment["status"]) => {
