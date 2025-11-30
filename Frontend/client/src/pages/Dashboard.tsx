@@ -157,12 +157,22 @@ export default function Dashboard() {
         return;
       }
 
-      const startDateTime = new Date(`${formDate}T${formTime}`);
+      // Validação para bloquear agendamentos no passado
+      const selectedDateTime = new Date(`${formDate}T${formTime}`);
+      const now = new Date();
+
+      if (selectedDateTime.getTime() < now.getTime()) {
+        toast.error("Cannot schedule an appointment in the past.");
+        return;
+      }
+
+      
+const startDateTimeString = `${formDate}T${formTime}:00Z`;
 
       const createdAppointment = await appointmentsApi.createAppointment({
         serviceId: formService,
         professionalId: formProfessional || undefined,
-        start: startDateTime.toISOString(),
+        start: startDateTimeString,
         notes: formNotes || undefined
       });
 
@@ -275,16 +285,27 @@ export default function Dashboard() {
             </p>
           </div>
 
-          <Dialog open={dialogOpen} onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) resetForm();
-          }}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                New Appointment
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            {user?.roles?.[0] === "Empresa" && (
+              <>
+                <Button variant="outline" onClick={() => navigate(slug ? `/${slug}/servicos` : "/servicos")}>
+                  Serviços
+                </Button>
+                <Button variant="outline" onClick={() => navigate(slug ? `/${slug}/colaboradores` : "/colaboradores")}>
+                  Colaboradores
+                </Button>
+              </>
+            )}
+            <Dialog open={dialogOpen} onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) resetForm();
+            }}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  New Appointment
+                </Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Appointment</DialogTitle>
