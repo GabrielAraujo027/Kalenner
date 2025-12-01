@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useCompany } from "@/hooks/useCompany";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, Check, X } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { toast } from "sonner";
 import { Link } from "wouter";
+import { validatePassword } from "@/lib/passwordValidator";
 
 export default function Signup() {
   const [, navigate] = useLocation();
@@ -19,6 +20,9 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Validação de senha em tempo real
+  const passwordValidation = validatePassword(password);
 
   // Get company slug from URL path
   useEffect(() => {
@@ -42,8 +46,8 @@ export default function Signup() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
+    if (!passwordValidation.isValid) {
+      toast.error("A senha não atende aos requisitos mínimos");
       return;
     }
 
@@ -128,6 +132,65 @@ export default function Signup() {
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
+
+          {/* Regras de senha */}
+          {password && (
+            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <p className="text-xs font-semibold text-foreground mb-2">Requisitos da senha:</p>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 text-xs">
+                  {passwordValidation.criteria.length ? (
+                    <Check className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <X className="w-4 h-4 text-red-600" />
+                  )}
+                  <span className={passwordValidation.criteria.length ? "text-green-600" : "text-muted-foreground"}>
+                    Mínimo de 8 caracteres
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  {passwordValidation.criteria.uppercase ? (
+                    <Check className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <X className="w-4 h-4 text-red-600" />
+                  )}
+                  <span className={passwordValidation.criteria.uppercase ? "text-green-600" : "text-muted-foreground"}>
+                    Ao menos 1 letra maiúscula
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  {passwordValidation.criteria.lowercase ? (
+                    <Check className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <X className="w-4 h-4 text-red-600" />
+                  )}
+                  <span className={passwordValidation.criteria.lowercase ? "text-green-600" : "text-muted-foreground"}>
+                    Ao menos 1 letra minúscula
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  {passwordValidation.criteria.number ? (
+                    <Check className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <X className="w-4 h-4 text-red-600" />
+                  )}
+                  <span className={passwordValidation.criteria.number ? "text-green-600" : "text-muted-foreground"}>
+                    Ao menos 1 número
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  {passwordValidation.criteria.special ? (
+                    <Check className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <X className="w-4 h-4 text-red-600" />
+                  )}
+                  <span className={passwordValidation.criteria.special ? "text-green-600" : "text-muted-foreground"}>
+                    Ao menos 1 caractere especial (!@#$%^&*)
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="relative">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
