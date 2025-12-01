@@ -114,6 +114,10 @@ export default function Dashboard() {
         
         const mappedAppointments: Appointment[] = appointmentsData.map(apt => {
           const service = servicesData.find(s => s.id === apt.serviceId);
+          // Parse a data sem conversão de timezone
+          const startDate = apt.start.split('T')[0]; // "2025-12-09"
+          const startTime = apt.start.split('T')[1].substring(0, 5); // "19:55"
+          
           return {
             id: apt.id,
             clientName: apt.clientId, 
@@ -121,8 +125,8 @@ export default function Dashboard() {
             clientPhone: "",
             service: apt.serviceName,
             professional: apt.professionalName,
-            date: new Date(apt.start).toISOString().split('T')[0],
-            time: new Date(apt.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+            date: startDate,
+            time: startTime,
             duration: service?.duration || 0,
             status: apt.status === "scheduled" ? "confirmed" : apt.status === "completed" ? "completed" : apt.status === "cancelled" ? "cancelled" : "pending",
             notes: apt.notes || ""
@@ -483,7 +487,7 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
                       <div className="flex items-center gap-6 text-base">
                         <div className="flex items-center gap-2 text-foreground font-semibold">
                           <Calendar className="h-5 w-5 text-primary" />
-                          <span>{new Date(appointment.date).toLocaleDateString('pt-BR')}</span>
+                          <span>{appointment.date.split('-').reverse().join('/')}</span>
                         </div>
                         <div className="flex items-center gap-2 text-foreground font-semibold">
                           <Clock className="h-5 w-5 text-primary" />
@@ -561,6 +565,7 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
             ))
           )}
         </div>
+      </div>
       </div>
 
       {/* Diálogo de confirmação de cancelamento */}
