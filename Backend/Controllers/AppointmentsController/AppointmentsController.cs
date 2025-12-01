@@ -338,7 +338,6 @@ namespace Kalenner.Controllers.AppointmentsController
             if (!isEmpresa && appointment.ClientId != user.Id)
                 return Forbid();
 
-            // Regras globais: Cancelled e Completed não podem ser alterados
             if (appointment.Status is AppointmentStatus.Cancelled or AppointmentStatus.Completed)
                 return BadRequest(new { error = "Agendamento não pode ser alterado quando está Cancelled ou Completed." });
 
@@ -346,7 +345,6 @@ namespace Kalenner.Controllers.AppointmentsController
 
             if (!isEmpresa)
             {
-                // Cliente só pode cancelar e somente se estiver Scheduled
                 if (newStatus != AppointmentStatus.Cancelled)
                     return BadRequest(new { error = "Cliente só pode cancelar o agendamento." });
                 if (appointment.Status != AppointmentStatus.Scheduled)
@@ -354,14 +352,11 @@ namespace Kalenner.Controllers.AppointmentsController
             }
             else
             {
-                // Empresa pode alterar conforme regras:
-                // Para concluir, negar ou confirmar (Scheduled), tem que estar em Scheduled
                 if (newStatus is AppointmentStatus.Completed or AppointmentStatus.Denied or AppointmentStatus.Scheduled)
                 {
                     if (appointment.Status != AppointmentStatus.Scheduled)
                         return BadRequest(new { error = "Para definir Completed, Denied ou Scheduled o agendamento deve estar em Scheduled." });
                 }
-                // Cancelar é permitido se não estiver em Completed/Cancelled (já coberto acima)
             }
 
             appointment.Status = newStatus;

@@ -50,7 +50,13 @@ class ApiService {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || `HTTP ${response.status}`);
+      const errorMessage = error.error || error.message || `HTTP ${response.status}: ${response.statusText}`;
+      throw { response: { data: error }, message: errorMessage };
+    }
+
+    // Se a resposta for 204 No Content, retornar objeto vazio
+    if (response.status === 204) {
+      return {} as T;
     }
 
     return response.json();
@@ -87,10 +93,9 @@ class ApiService {
    * PATCH request
    */
   async patch<T>(endpoint: string, data?: unknown): Promise<T> {
-    console.log('PATCH data:', data, 'stringified:', JSON.stringify(data));
     return this.request<T>(endpoint, {
       method: "PATCH",
-      body: data ? JSON.stringify(data) : undefined,
+      body: data !== undefined ? JSON.stringify(data) : undefined,
     });
   }
 

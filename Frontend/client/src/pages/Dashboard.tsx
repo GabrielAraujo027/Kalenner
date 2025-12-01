@@ -8,7 +8,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Calendar, Clock, User, Filter, Trash2 } from "lucide-react";
+import { Plus, Search, Calendar, Clock, User, Filter } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +38,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+enum AppointmentStatus {
+  Scheduled = 1,
+  Cancelled = 2,
+  Completed = 3,
+  Denied = 4
+}
+
 interface Appointment {
   id: number;
   clientName: string;
@@ -48,7 +55,7 @@ interface Appointment {
   date: string;
   time: string;
   duration: number;
-  status: "confirmed" | "pending" | "completed" | "cancelled" | "denied";
+  status: AppointmentStatus;
   notes: string;
 }
 
@@ -62,21 +69,24 @@ export default function Dashboard() {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [appointmentToCancel, setAppointmentToCancel] = useState<number | null>(null);
 
-  // Helper para converter status string para número (enum do backend)
-  const statusToNumber = (status: string): number => {
+
+  const getStatusLabel = (status: AppointmentStatus): string => {
     switch (status) {
-      case "scheduled":
-      case "confirmed":
-      case "pending":
-        return 1; // Scheduled
-      case "cancelled":
-        return 2; // Cancelled
-      case "completed":
-        return 3; // Completed
-      case "denied":
-        return 4; // Denied
-      default:
-        return 1;
+      case AppointmentStatus.Scheduled: return "Scheduled";
+      case AppointmentStatus.Cancelled: return "Cancelled";
+      case AppointmentStatus.Completed: return "Completed";
+      case AppointmentStatus.Denied: return "Denied";
+      default: return "Unknown";
+    }
+  };
+
+  const getStatusColor = (status: AppointmentStatus): string => {
+    switch (status) {
+      case AppointmentStatus.Scheduled: return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+      case AppointmentStatus.Cancelled: return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+      case AppointmentStatus.Completed: return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+      case AppointmentStatus.Denied: return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300";
+      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300";
     }
   };
 
@@ -114,9 +124,9 @@ export default function Dashboard() {
         
         const mappedAppointments: Appointment[] = appointmentsData.map(apt => {
           const service = servicesData.find(s => s.id === apt.serviceId);
-          // Parse a data sem conversão de timezone
-          const startDate = apt.start.split('T')[0]; // "2025-12-09"
-          const startTime = apt.start.split('T')[1].substring(0, 5); // "19:55"
+          const startDate = apt.start.split('T')[0];
+          const startTime = apt.start.split('T')[1].substring(0, 5);
+          const status = apt.status as AppointmentStatus;
           
           return {
             id: apt.id,
@@ -128,7 +138,7 @@ export default function Dashboard() {
             date: startDate,
             time: startTime,
             duration: service?.duration || 0,
-            status: apt.status === "scheduled" ? "confirmed" : apt.status === "completed" ? "completed" : apt.status === "cancelled" ? "cancelled" : "pending",
+            status,
             notes: apt.notes || ""
           };
         });
@@ -191,7 +201,7 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
         date: formDate,
         time: formTime,
         duration: selectedService.duration,
-        status: "pending",
+        status: AppointmentStatus.Scheduled,
         notes: formNotes
       };
 
@@ -218,25 +228,24 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
     }
   };
 
-  const handleStatusChange = async (id: number, newStatus: Appointment["status"]) => {
+  const handleStatusChange = async (id: number, newStatus: AppointmentStatus) => {
     // Se for cancelamento, abrir diálogo de confirmação
-    if (newStatus === "cancelled") {
+    if (newStatus === AppointmentStatus.Cancelled) {
       setAppointmentToCancel(id);
       setCancelDialogOpen(true);
       return;
     }
 
     try {
-      const statusNumber = statusToNumber(newStatus);
-      await appointmentsApi.updateAppointmentStatus(id, statusNumber);
+      await appointmentsApi.updateAppointmentStatus(id, newStatus);
       
       setAppointments(appointments.map(a =>
         a.id === id ? { ...a, status: newStatus } : a
       ));
-      toast.success("Appointment status updated");
+      toast.success("Status atualizado com sucesso");
     } catch (error: any) {
       console.error("Failed to update status:", error);
-      const errorMessage = error?.response?.data?.error || error?.message || "Failed to update appointment status";
+      const errorMessage = error?.response?.data?.error || error?.message || "Falha ao atualizar status";
       toast.error(errorMessage);
     }
   };
@@ -245,15 +254,15 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
     if (!appointmentToCancel) return;
 
     try {
-      await appointmentsApi.updateAppointmentStatus(appointmentToCancel, 2); // 2 = Cancelled
+      await appointmentsApi.updateAppointmentStatus(appointmentToCancel, AppointmentStatus.Cancelled);
       
       setAppointments(appointments.map(a =>
-        a.id === appointmentToCancel ? { ...a, status: "cancelled" } : a
+        a.id === appointmentToCancel ? { ...a, status: AppointmentStatus.Cancelled } : a
       ));
-      toast.success("Appointment cancelled");
+      toast.success("Agendamento cancelado com sucesso");
     } catch (error: any) {
       console.error("Failed to cancel appointment:", error);
-      const errorMessage = error?.response?.data?.error || error?.message || "Failed to cancel appointment";
+      const errorMessage = error?.response?.data?.error || error?.message || "Falha ao cancelar agendamento";
       toast.error(errorMessage);
     } finally {
       setCancelDialogOpen(false);
@@ -272,21 +281,12 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
   const filteredAppointments = appointments.filter(a => {
     const matchesSearch = a.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          a.service.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || a.status === statusFilter;
+    const matchesStatus = statusFilter === "all" || a.status.toString() === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const getStatusColor = (status: Appointment["status"]) => {
-    switch (status) {
-      case "confirmed": return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
-      case "pending": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
-      case "completed": return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
-      case "cancelled": return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
-    }
-  };
-
   const todayAppointments = appointments.filter(a => a.date === new Date().toISOString().split('T')[0]);
-  const confirmedAppointments = appointments.filter(a => a.status === "confirmed");
+  const scheduledAppointments = appointments.filter(a => a.status === AppointmentStatus.Scheduled);
 
   return (
     <DashboardLayout userRole={user?.roles[0] as "Empresa" | "Cliente"} onLogout={handleLogout}>
@@ -416,11 +416,11 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Confirmed</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Agendados</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">{confirmedAppointments.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Total confirmed</p>
+              <div className="text-3xl font-bold text-blue-600">{scheduledAppointments.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">Total agendados</p>
             </CardContent>
           </Card>
 
@@ -454,11 +454,11 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="all">Todos os Status</SelectItem>
+                  <SelectItem value="1">Scheduled</SelectItem>
+                  <SelectItem value="2">Cancelled</SelectItem>
+                  <SelectItem value="3">Completed</SelectItem>
+                  <SelectItem value="4">Denied</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -484,7 +484,7 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
                       <div className="flex items-center gap-3">
                         <h3 className="text-xl font-bold text-foreground">{appointment.service}</h3>
                         <Badge className={getStatusColor(appointment.status)}>
-                          {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                          {getStatusLabel(appointment.status)}
                         </Badge>
                       </div>
                       
@@ -519,49 +519,37 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
                       )}
                     </div>
                     <div className="flex gap-2">
-                      {/* Se cancelado, apenas mostrar o status */}
-                      {appointment.status === "cancelled" ? (
-                        <Badge className={getStatusColor(appointment.status)} variant="outline">
-                          Cancelled
-                        </Badge>
-                      ) : (
-                        /* Se cliente, só pode cancelar */
-                        isClient ? (
+                      {/* Se cliente, só pode cancelar se status for Scheduled */}
+                      {isClient ? (
+                        appointment.status === AppointmentStatus.Scheduled ? (
                           <Button
-                            variant="outline"
+                            variant="destructive"
                             size="sm"
-                            onClick={() => handleStatusChange(appointment.id, "cancelled")}
-                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleStatusChange(appointment.id, AppointmentStatus.Cancelled)}
                           >
-                            Cancel
+                            Cancelar Agendamento
                           </Button>
                         ) : (
-                          /* Se empresa, pode alterar todos os status */
-                          <>
-                            <Select
-                              value={appointment.status}
-                              onValueChange={(value) => handleStatusChange(appointment.id, value as Appointment["status"])}
-                            >
-                              <SelectTrigger className="w-32">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="confirmed">Confirm</SelectItem>
-                                <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="completed">Complete</SelectItem>
-                                <SelectItem value="cancelled">Cancel</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteAppointment(appointment.id)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
+                          <Badge className={getStatusColor(appointment.status)} variant="outline">
+                            {getStatusLabel(appointment.status)}
+                          </Badge>
                         )
+                      ) : (
+                        /* Se empresa, pode alterar todos os status */
+                        <Select
+                          value={appointment.status.toString()}
+                          onValueChange={(value) => handleStatusChange(appointment.id, parseInt(value) as AppointmentStatus)}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">Scheduled</SelectItem>
+                            <SelectItem value="2">Cancelled</SelectItem>
+                            <SelectItem value="3">Completed</SelectItem>
+                            <SelectItem value="4">Denied</SelectItem>
+                          </SelectContent>
+                        </Select>
                       )}
                     </div>
                   </div>
