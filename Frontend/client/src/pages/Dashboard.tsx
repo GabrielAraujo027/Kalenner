@@ -300,16 +300,16 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
             </p>
           </div>
 
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
             {user?.roles?.[0] === "Empresa" && (
-              <>
+              <div className="flex gap-2 flex-wrap">
                 <Button variant="outline" onClick={() => navigate(slug ? `/${slug}/servicos` : "/servicos")}>
                   Serviços
                 </Button>
                 <Button variant="outline" onClick={() => navigate(slug ? `/${slug}/colaboradores` : "/colaboradores")}>
                   Colaboradores
                 </Button>
-              </>
+              </div>
             )}
             <Dialog open={dialogOpen} onOpenChange={(open) => {
               setDialogOpen(open);
@@ -399,8 +399,8 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
                 </Button>
               </div>
             </DialogContent>
-          </Dialog>
-        </div>
+</Dialog>
+            </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
