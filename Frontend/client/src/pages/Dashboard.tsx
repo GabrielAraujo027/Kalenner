@@ -292,7 +292,7 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
     <DashboardLayout userRole={user?.roles[0] as "Empresa" | "Cliente"} onLogout={handleLogout}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground mt-1">
@@ -300,7 +300,7 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
             </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {user?.roles?.[0] === "Empresa" && (
               <>
                 <Button variant="outline" onClick={() => navigate(slug ? `/${slug}/servicos` : "/servicos")}>
@@ -477,29 +477,29 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
           ) : (
             filteredAppointments.map((appointment) => (
               <Card key={appointment.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex-1 space-y-3">
+                <CardContent className="p-4">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div className="flex-1 space-y-2">
                       {/* Linha principal: Serviço e Status */}
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-xl font-bold text-foreground">{appointment.service}</h3>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <h3 className="text-lg font-bold text-foreground">{appointment.service}</h3>
                         <Badge className={getStatusColor(appointment.status)}>
                           {getStatusLabel(appointment.status)}
                         </Badge>
                       </div>
                       
                       {/* Linha de informações: Data, Hora e Duração */}
-                      <div className="flex items-center gap-6 text-base">
-                        <div className="flex items-center gap-2 text-foreground font-semibold">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                        <div className="flex items-center gap-1">
                           <Calendar className="h-5 w-5 text-primary" />
                           <span>{appointment.date.split('-').reverse().join('/')}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-foreground font-semibold">
+                        <div className="flex items-center gap-1">
                           <Clock className="h-5 w-5 text-primary" />
                           <span>{appointment.time}</span>
                         </div>
                         {appointment.duration > 0 && (
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-xs text-muted-foreground">
                             ({appointment.duration} min)
                           </div>
                         )}
@@ -507,7 +507,7 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
 
                       {/* Profissional */}
                       {appointment.professional && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <User className="h-4 w-4" />
                           <span>{appointment.professional}</span>
                         </div>
@@ -515,10 +515,10 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
                       
                       {/* Notas */}
                       {appointment.notes && (
-                        <p className="text-sm text-muted-foreground italic">Note: {appointment.notes}</p>
+                        <p className="text-xs text-muted-foreground italic">Note: {appointment.notes}</p>
                       )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       {/* Se cliente, só pode cancelar se status for Scheduled */}
                       {isClient ? (
                         appointment.status === AppointmentStatus.Scheduled ? (
