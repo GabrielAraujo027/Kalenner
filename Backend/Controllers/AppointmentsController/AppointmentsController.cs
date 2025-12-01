@@ -282,17 +282,17 @@ namespace Kalenner.Controllers.AppointmentsController
 
             if (dto.Status.HasValue)
             {
-                var newStatus = dto.Status.Value;
+                var newStatusUpdate = dto.Status.Value;
                 if (!isEmpresa)
                 {
-                    if (appointment.Status == AppointmentStatus.Scheduled && newStatus == AppointmentStatus.Cancelled)
+                    if (appointment.Status == AppointmentStatus.Scheduled && newStatusUpdate == AppointmentStatus.Cancelled)
                         appointment.Status = AppointmentStatus.Cancelled;
                     else
                         return BadRequest(new { error = "Status inválido para o cliente." });
                 }
                 else
                 {
-                    appointment.Status = newStatus;
+                    appointment.Status = newStatusUpdate;
                 }
             }
 
@@ -323,6 +323,9 @@ namespace Kalenner.Controllers.AppointmentsController
             if (status is null)
                 return BadRequest(new { error = "Status obrigatório." });
 
+            if (!Enum.IsDefined(typeof(AppointmentStatus), status.Value))
+                return BadRequest(new { error = "Status inválido." });
+
             var user = await _userManager.GetUserAsync(User);
             if (user is null) return Unauthorized();
             var isEmpresa = await _userManager.IsInRoleAsync(user, Roles.Empresa);
@@ -335,15 +338,33 @@ namespace Kalenner.Controllers.AppointmentsController
             if (!isEmpresa && appointment.ClientId != user.Id)
                 return Forbid();
 
+            // Regras globais: Cancelled e Completed não podem ser alterados
+            if (appointment.Status is AppointmentStatus.Cancelled or AppointmentStatus.Completed)
+                return BadRequest(new { error = "Agendamento não pode ser alterado quando está Cancelled ou Completed." });
+
+            var newStatus = status.Value;
+
             if (!isEmpresa)
             {
+                // Cliente só pode cancelar e somente se estiver Scheduled
+                if (newStatus != AppointmentStatus.Cancelled)
+                    return BadRequest(new { error = "Cliente só pode cancelar o agendamento." });
                 if (appointment.Status != AppointmentStatus.Scheduled)
                     return BadRequest(new { error = "Somente agendamentos em Scheduled podem ser cancelados." });
-                if (status != AppointmentStatus.Cancelled)
-                    return BadRequest(new { error = "Status inválido para o cliente." });
+            }
+            else
+            {
+                // Empresa pode alterar conforme regras:
+                // Para concluir, negar ou confirmar (Scheduled), tem que estar em Scheduled
+                if (newStatus is AppointmentStatus.Completed or AppointmentStatus.Denied or AppointmentStatus.Scheduled)
+                {
+                    if (appointment.Status != AppointmentStatus.Scheduled)
+                        return BadRequest(new { error = "Para definir Completed, Denied ou Scheduled o agendamento deve estar em Scheduled." });
+                }
+                // Cancelar é permitido se não estiver em Completed/Cancelled (já coberto acima)
             }
 
-            appointment.Status = status.Value;
+            appointment.Status = newStatus;
             appointment.UpdatedAt = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
