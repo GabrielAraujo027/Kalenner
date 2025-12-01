@@ -400,7 +400,8 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
               </div>
             </DialogContent>
 </Dialog>
-            </div>
+          </div>
+        </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -558,7 +559,6 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
             ))
           )}
         </div>
-      </div>
       </div>
 
       {/* Diálogo de confirmação de cancelamento */}
