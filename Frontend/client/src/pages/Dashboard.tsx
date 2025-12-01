@@ -136,9 +136,10 @@ export default function Dashboard() {
         setAppointments(mappedAppointments);
         setServices(servicesData);
         setProfessionals(professionalsData);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to load data:", error);
-        toast.error("Failed to load appointments");
+        const errorMessage = error?.response?.data?.error || error?.message || "Failed to load appointments";
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -198,9 +199,10 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
       toast.success("Appointment created successfully!");
       setDialogOpen(false);
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create appointment:", error);
-      toast.error("Failed to create appointment");
+      const errorMessage = error?.response?.data?.error || error?.message || "Failed to create appointment";
+      toast.error(errorMessage);
     }
   };
 
@@ -209,9 +211,10 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
       await appointmentsApi.deleteAppointment(id);
       setAppointments(appointments.filter(a => a.id !== id));
       toast.success("Appointment deleted successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to delete appointment:", error);
-      toast.error("Failed to delete appointment");
+      const errorMessage = error?.response?.data?.error || error?.message || "Failed to delete appointment";
+      toast.error(errorMessage);
     }
   };
 
@@ -231,9 +234,10 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
         a.id === id ? { ...a, status: newStatus } : a
       ));
       toast.success("Appointment status updated");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to update status:", error);
-      toast.error("Failed to update appointment status");
+      const errorMessage = error?.response?.data?.error || error?.message || "Failed to update appointment status";
+      toast.error(errorMessage);
     }
   };
 
@@ -247,9 +251,10 @@ const startDateTimeString = `${formDate}T${formTime}:00Z`;
         a.id === appointmentToCancel ? { ...a, status: "cancelled" } : a
       ));
       toast.success("Appointment cancelled");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to cancel appointment:", error);
-      toast.error("Failed to cancel appointment");
+      const errorMessage = error?.response?.data?.error || error?.message || "Failed to cancel appointment";
+      toast.error(errorMessage);
     } finally {
       setCancelDialogOpen(false);
       setAppointmentToCancel(null);
